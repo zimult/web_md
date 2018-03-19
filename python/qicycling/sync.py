@@ -90,6 +90,8 @@ def getArticle(page):
         img = image.select('img')
 
         if len(img) <= 0:
+            print images[0]
+            print("--------- not found img")
             continue
 
         a1 = img[0].attrs
