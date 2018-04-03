@@ -13,3 +13,5 @@ database_app = "qicycling_root"
 
 # web Config
 web_url = "http://www.qicycling.cn"
+#htmp_path = "/var/www/traveler/html/_"
+html_path = "/var/www/traveler/html/_"

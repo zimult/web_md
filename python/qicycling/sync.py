@@ -10,9 +10,36 @@ import config
 import db
 import os
 from PIL import Image
+import sys
+import cStringIO, urllib2
+import time
 
 import traceback
-from fn import log, db_app
+from fn import log, db_app, db_wp
+from urllib import quote
+from urllib import unquote
+
+reload(sys)
+sys.setdefaultencoding('utf8')
+
+def downloadPic(url):
+    basename = os.path.basename(url)
+    #print basename
+    cmd = "curl " + url + " -o pic/" + basename
+    os.system(cmd)
+    return "pic/" + basename
+
+def getPicSize(file):
+    img_ = Image.open(file)
+    width, height = img_.size
+    return width, height
+
+def getUrlPicSize(url):
+    file = downloadPic(url)
+    img_ = Image.open(file)
+    width, height = img_.size
+    #os.remove(file)
+    return width, height
 
 def getBanner(pageUrl):
     try:
@@ -20,11 +47,15 @@ def getBanner(pageUrl):
 
         # read from url
         response = requests.get(pageUrl)
+
         html = response.text
+        #print html
 
         soup = BeautifulSoup(html, "html.parser")
+        ca = soup.find('div', {'class': 'container-fluid pd0'})
+        #print ca
 
-        banner = soup.select('[class="item"]')
+        banner = ca.select('[class="item"]')
         for i in xrange(len(banner)):
             # print type(banner[i])
             tag = banner[i]
@@ -46,7 +77,7 @@ def getBanner(pageUrl):
         return list
     except Exception, e:
         print e
-
+        print traceback.format_exc()
 
 def recordBanner(db_app, banners):
     cursor = db_app.get_cursor()
@@ -58,12 +89,14 @@ def recordBanner(db_app, banners):
             cursor.execute("SELECT id FROM banner where pic_url='%s' and title='%s'"%(url, text))
             result = cursor.fetchone()
             if result is None:
-                sql = "INSERT INTO banner (pic_url, title, create_date, update_date, `position`, `resource_type`) values ('%s', '%s', now(), now(), 'index', 1)"%(url, text)
-                print sql
+                t = time.time()
+                ts = int(round(t * 1000))
+                sql = "INSERT INTO banner (pic_url, title, `timestamp`, `position`, `resource_type`) values ('%s', '%s', %d, 'index', 1)"%(url, text, ts)
+                #print sql
                 cursor.execute(sql)
             else:
                 print "banner exists..."
-                pass
+
             db_app.commit()
     except Exception, e:
         log.error(e.message)
@@ -161,27 +194,45 @@ def get_href(url):
 
     #####################  data
     new_html = html_top + '\n' \
-                          "<body class=\"post-template-default single single-post single-format-standard\">\n" \
-                          "<section class=\"nt-warp nt-warp-nospace\">\n" \
-                          "<div class=\"container\">\n"
+                          "<body class=\"post-template-default single single-post single-format-standard\">\n"
 
-    cover = soup.findAll('div', {'class': 'suxing post-cover'})
-    for i in xrange(len(cover)):
-        html_article = cover[i].prettify()
-        new_html += html_article
+    ##// 视频文件
+    video_list = []
+    videos = soup.findAll('section', {'class': 'nt-warp nt-warp-video pt0'})
+    if len(videos) > 0:
+        for i in xrange(len(videos)):
+            html_article = videos[i].prettify()
+            new_html += html_article
 
-    add_str = "<div class =\"row\">" \
-                          "<main class =\"l-main col-xs-12 col-sm-8 col-md-9\">" \
-                          "<div class =\"m-post\">"
-    new_html += add_str
+            vs = videos[i].select('iframe')
+            for v in vs:
+                print v.attrs['src']
+                video_list.append(v.attrs['src'])
 
-    article = soup.select('article')
-    for i in xrange(len(article)):
-        html_article = article[i].prettify()
-        # print html_article
-        new_html += html_article
 
-    new_html = new_html + '</div>\n</main>\n</div>\n' + '</div>\n</section>\n</body>'
+    if len(videos) <= 0:
+        new_html += "<section class=\"nt-warp nt-warp-nospace\">\n" \
+                    "<div class=\"container\">\n"
+        cover = soup.findAll('div', {'class': 'suxing post-cover'})
+        print("cover len:%d"%len(cover))
+        for i in xrange(len(cover)):
+            html_article = cover[i].prettify()
+            new_html += html_article
+
+        add_str = "<div class =\"row\">" \
+                  "<main class =\"l-main col-xs-12 col-sm-8 col-md-9\">" \
+                  "<div class =\"m-post\">"
+        new_html += add_str
+
+        article = soup.select('article')
+        print("article len:%d" % len(article))
+        for i in xrange(len(article)):
+            html_article = article[i].prettify()
+            # print html_article
+            new_html += html_article
+        new_html = new_html + '</div>\n</main>\n</div>\n' + '</div>\n</section>\n'
+
+    new_html += "</body>"
 
     author = soup.find('div', {'class': 'author-name'})
     author_name = ''
@@ -204,32 +255,121 @@ def get_href(url):
             height = img.get('height')
             if width is None or height is None:
                 print img_url
-                img_ = Image.open(requests.get(img_url, stream=True).raw)
-                width, height = img_.size
+                try:
+                    img_ = Image.open(requests.get(img_url, stream=True).raw)
+                    width, height = img_.size
+                except Exception, e:
+                    try:
+                        width, height = getUrlPicSize(img_url)
+                    except Exception, e:
+                        log.error(e.message)
+                        log.error(traceback.format_exc())
+                        continue
 
             pinfo = {'url':img_url, 'width':int(width), 'height':int(height)}
-            img_list.append(pinfo)
+            if(int(width) > 100):
+                img_list.append(pinfo)
 
-    return new_html, img_list, author_name
+    new_html = new_html.replace("src=\"//v.qq.com", "src=\"https://v.qq.com")
+
+    idx1 = new_html.find('<a class="btn-action btn-like')
+    #print idx1
+    h1 = new_html[0:idx1-1]
+    h2 = new_html[idx1:]
+
+    idx2 = h2.find("</a>")
+    h3 = h2[idx2+4:]
+    nh = h1 + h3
+    #print nh
+    return nh, img_list, author_name, video_list
+
+def save_h5(html, article_id):
+    filename = config.html_path + str(article_id) + '.html'
+    #filename = "./_" + str(article_id) + '.html'
+    with open(filename, 'w') as f:
+        f.write(html)
+    return "https://www.qicycling.cn/html/_" + str(article_id) + '.html'
 
 
 def recordArticle(db_app, articles):
-    cursor = db_app.get_cursor()
+    cursor_app = db_app.get_cursor()
+    cursor_wp = db_wp.get_cursor()
     try:
         for article in articles:
-            article_id = article['article_id']
+            article_id = int(article['article_id'])
             img_url = article['src']
             title = article['alt']
             description = article['text']
             href = article['href']
-            html, img_list, author = get_href(href)
+            #print("--------- todo article:%d"%article_id)
 
-            # 时间从 db_wp 读取 wp_posts.id =
-            if len(img_list) <= 0:
-                img_list.append(img_url)
-            print article_id, img_list, author, title, description
+            cursor_app.execute("SELECT status FROM resource where id=%d"%article_id)
+            result = cursor_app.fetchone()
+            if result is None:
+                html, img_list, author, v_list = get_href(href)
+
+                # 时间从 db_wp 读取 wp_posts.id =
+                if len(img_list) <= 0:
+                    img_ = Image.open(requests.get(img_url, stream=True).raw)
+                    width, height = img_.size
+                    pinfo = {'url': img_url, 'width': int(width), 'height': int(height)}
+                    img_list.append(pinfo)
+
+                cursor_wp.execute("SELECT UNIX_TIMESTAMP(post_date) FROM wp_posts where id=%d" % article_id)
+                result = cursor_wp.fetchone()
+                ts = result[0]
+                # print article_id, img_list, author, title, description, ts
+                h5 = save_h5(html, article_id)
+
+                sql = "INSERT INTO resource (id, title, description, status, h5url, is_vip, publisher, type,TIMESTAMP)" \
+                        " VALUES (%d, '%s', '%s', 1, '%s', 0, '%s', 0, %d)" % (article_id, title, description, h5, author, ts*1000)
+                cursor_app.execute(sql)
+
+                if(len(v_list)>0):
+                    v_url = quote(v_list[0])
+                    #v_url = quote(v_list[0])
+                    sql = "UPDATE resource set video_url='%s' where id=%d"%(v_url,article_id)
+                    #print sql
+                    cursor_app.execute(sql)
+
+                for i in xrange(len(img_list)):
+                    img = img_list[i]
+                    #surl = quote(img['url'])
+                    surl = img['url']
+                    sql = "INSERT INTO resource_image (resource_id, height, `length`, url) values (%d,%d,%d,'%s')"%(article_id,int(img['width']),int(img['height']),surl)
+                    cursor_app.execute(sql)
+            else:
+                #print("article_id:%d already exists."%article_id)
+                continue
+
+            # 修改赛事类型
+            sql2 = "select ter.name, r.`object_id`, tax.taxonomy  from wp_term_taxonomy tax inner join wp_terms ter on ter.`term_id` = tax.term_id" \
+                                " inner join `wp_term_relationships` r on r.`term_taxonomy_id` = tax.`term_taxonomy_id`" \
+                            " where taxonomy = 'category' and r.`object_id` = %d"%article_id
+            cursor_wp.execute(sql2)
+            r2 = cursor_wp.fetchone()
+            if r2 is None:
+                log.error("------ article:%d not found category")
+            else:
+                name = r2[0]
+                sql = "SELECT id FROM `module` where name='%s'"%name
+                #print sql
+                cursor_app.execute(sql)
+                r = cursor_app.fetchone()
+                if r is not None:
+                    module_id = int(r[0])
+                else:
+                    #
+                    t = time.time()
+                    ts = int(round(t * 1000))
+                    cursor_app.execute("INSERT INTO `module` (status, description, display_order, name, resource_type, parent_id, timestamp)" \
+                                   " values (1, '%s', 20, '%s', 1, 1, %d)" % (name, name, ts))
+                    module_id = int(cursor_app.lastrowid)
+                cursor_app.execute("INSERT INTO module_resource (status, module_id, resource_id, `timestamp`) " \
+                               "VALUES (1, %d, %d, %d)"%(module_id, article_id, ts))
 
         db_app.commit()
+        db_wp.commit()
     except Exception, e:
         log.error(e.message)
         log.error(traceback.format_exc())
@@ -249,22 +389,22 @@ def recordArticle(db_app, articles):
 if __name__ == '__main__':
     # banner
 
-    # banners = getBanner(config.web_url)
-    # recordBanner(db_app, banners)
-
-    articles = getArticle(1)
-    recordArticle(db_app, articles)
+    banners = getBanner(config.web_url)
+    #print banners
+    recordBanner(db_app, banners)
+    #
+    page = 0
+    while(True):
+        page += 1
+        articles = getArticle(page)
+        if len(articles) <= 0:
+            break
+        recordArticle(db_app, articles)
+        print("---------------- getArticle page:%d Done."%page)
 
     #print  getArticle(2)
 
-    # 1377
-    # 1370 post-template-default single single-post postid-1370 single-format-standard logged-in admin-bar no-customize-support
-    # 1363 post-template-default single single-post postid-1363 single-format-standard logged-in admin-bar no-customize-support post-style03
-    # 1365
-
-    ## 1346
-    ## 1329
-    # html, img_list, author = get_href('http://www.qicycling.cn/1370.html')
-    # print img_list
+    # html, img_list, author, video_list = get_href('http://www.qicycling.cn/2317.html')
+    # print html
     # print author
 
