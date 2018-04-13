@@ -55,31 +55,40 @@ def getBanner(pageUrl):
         ca = soup.find('div', {'class': 'container-fluid pd0'})
         #print ca
 
-        banner = ca.select('[class="item"]')
-        for i in xrange(len(banner)):
-            # print type(banner[i])
-            tag = banner[i]
-            banner_url = tag.get('style')[22:-2]
+        # banner = ca.select('[class="item"]')
+        # for i in xrange(len(banner)):
+        #     # print type(banner[i])
+        #     tag = banner[i]
+        #     banner_url = tag.get('style')[22:-2]
+        #
+        #     x = 0
+        #     chan = ''
+        #     text = ''
+        #     for child in tag.stripped_strings:
+        #         if x == 0:
+        #             chan = child
+        #         if x == 1:
+        #             text = child
+        #         x += 1
+        #
+        #     #print("banner:" + banner_url + ", chan:" + chan + ", text:" + text)
+        #     rt = {'banner':banner_url, 'chan': chan, 'text':text}
+        #     list.append(rt)
 
-            x = 0
-            chan = ''
-            text = ''
-            for child in tag.stripped_strings:
-                if x == 0:
-                    chan = child
-                if x == 1:
-                    text = child
-                x += 1
+        banners = ca.findAll('a', {'class': 'permalink'})
+        for banner in banners:
+            #print banner
+            href = banner.attrs['href']
+            base = os.path.basename(href).split('.')[0]
+            #print base
+            list.append(base)
 
-            #print("banner:" + banner_url + ", chan:" + chan + ", text:" + text)
-            rt = {'banner':banner_url, 'chan': chan, 'text':text}
-            list.append(rt)
         return list
     except Exception, e:
         print e
         print traceback.format_exc()
 
-def recordBanner(db_app, banners):
+def recordBanner_pic(db_app, banners):
     cursor = db_app.get_cursor()
     try:
         for banner in banners:
@@ -101,6 +110,43 @@ def recordBanner(db_app, banners):
     except Exception, e:
         log.error(e.message)
         log.error(traceback.format_exc())
+
+def recordBanner(db_app, banners):
+    cursor = db_app.get_cursor()
+    try:
+        modules = get_modules(db_app)
+        str = ','.join(banners)
+        #print str
+        cursor.execute("DELETE FROM resource_banner where resource_id not in (%s)"%str)
+
+        for bn in banners:
+            banner = int(bn)
+            for module in modules:
+                cursor.execute("SELECT id FROM resource_banner where `position`=%d and resource_id=%d"%(module, banner))
+                result = cursor.fetchone()
+                if result is None:
+                    t = time.time()
+                    ts = int(round(t * 1000))
+                    cursor.execute("INSERT INTO resource_banner (status, `timestamp`, `position`, resource_id) values (1, %d,%d,%d)"%(ts,module,banner))
+                else:
+                    print "banner exists ..."
+
+        db_app.commit()
+    except Exception, e:
+        log.error(e.message)
+        log.error(traceback.format_exc())
+
+
+def get_modules(db_app):
+    list = []
+    cursor = db_app.get_cursor()
+    cursor.execute("SELECT id FROM `module` WHERE parent_id = 1")
+    results = cursor.fetchall()
+    for row in results:
+        id = row[0]
+        #print id
+        list.append(id)
+    return list
 
 def getArticle(page):
     # curl -d 'paged=0&action=ajax_load_posts&append=home-list&page=home' http://www.qicycling.cn/wp-admin/admin-ajax.php
@@ -158,6 +204,9 @@ def get_href(url):
     response = requests.get(url)
     html = response.text
     soup = BeautifulSoup(html, "html.parser")
+    print type(soup)
+    soup.find('div', {'class': 'post-footer clearfix'}).extract()
+    #print soup
 
     html_head = soup.head.prettify()
     html_top = '' + html_head
@@ -234,6 +283,10 @@ def get_href(url):
 
     new_html += "</body>"
 
+    #footer = soup.find('div', {'class': 'post-footer clearfix'})
+    #footer_text = footer.prettify()
+    #print footer_text
+
     author = soup.find('div', {'class': 'author-name'})
     author_name = ''
     if author:
@@ -272,16 +325,26 @@ def get_href(url):
 
     new_html = new_html.replace("src=\"//v.qq.com", "src=\"https://v.qq.com")
 
-    idx1 = new_html.find('<a class="btn-action btn-like')
-    #print idx1
-    h1 = new_html[0:idx1-1]
-    h2 = new_html[idx1:]
+    # #idx1 = new_html.find('<a class="btn-action btn-like')
+    # idx1 = new_html.find('<div class="post-footer clearfix">')
+    # #print idx1
+    # h1 = new_html[0:idx1-1]
+    # h2 = new_html[idx1:]
 
-    idx2 = h2.find("</a>")
-    h3 = h2[idx2+4:]
-    nh = h1 + h3
+    # idx_f = new_html.find(footer_text)
+    # print idx_f
+    # print len(footer_text)
+    #
+    # #idx2 = h2.find("</a>")
+    # # str2 = "下载封面\n</a>\n</p>\n</div>\n</div>\n</div>\n</div>\n</div>\n</div>\n</div>\n</div>"
+    # # idx2 = h2.find(str2)
+    # # print idx2
+    # # h3 = h2[idx2+len(str2):]
+    # # ＃h3 = "下载封面"
+    #
+    # nh = h1 + h3
     #print nh
-    return nh, img_list, author_name, video_list
+    return new_html, img_list, author_name, video_list
 
 def save_h5(html, article_id):
     filename = config.html_path + str(article_id) + '.html'
@@ -374,6 +437,14 @@ def recordArticle(db_app, articles):
         log.error(e.message)
         log.error(traceback.format_exc())
 
+
+def redoHtml(articles):
+    for article in articles:
+        article_id = int(article['article_id'])
+        href = "http://www.qicycling.cn/" + str(article_id) + ".html"
+        html, img_list, author, v_list = get_href(href)
+        h5 = save_h5(html, article_id)
+
 # url = "http://www.qicycling.cn"
 # getBanner(url)
 #
@@ -392,7 +463,7 @@ if __name__ == '__main__':
     banners = getBanner(config.web_url)
     #print banners
     recordBanner(db_app, banners)
-    #
+
     page = 0
     while(True):
         page += 1
@@ -400,6 +471,7 @@ if __name__ == '__main__':
         if len(articles) <= 0:
             break
         recordArticle(db_app, articles)
+        #redoHtml(articles)
         print("---------------- getArticle page:%d Done."%page)
 
     #print  getArticle(2)
