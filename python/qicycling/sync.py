@@ -203,6 +203,9 @@ def get_href(url):
 
     response = requests.get(url)
     html = response.text
+    return get_href_detail(html)
+
+def get_href_detail(html):
     soup = BeautifulSoup(html, "html.parser")
     print type(soup)
     soup.find('div', {'class': 'post-footer clearfix'}).extract()
