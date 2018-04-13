@@ -445,17 +445,6 @@ def redoHtml(articles):
         html, img_list, author, v_list = get_href(href)
         h5 = save_h5(html, article_id)
 
-# url = "http://www.qicycling.cn"
-# getBanner(url)
-#
-# list = getArticle()
-#
-# for info in list:
-#     src = info['src']
-#     href = info['href']
-#     alt = info['alt']
-#     get_href(href)
-#     print alt
 
 if __name__ == '__main__':
     # banner
