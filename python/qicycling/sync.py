@@ -1,4 +1,3 @@
-#! /usr/bin/python
 # encoding:utf-8
 
 import requests
@@ -13,6 +12,7 @@ from PIL import Image
 import sys
 import cStringIO, urllib2
 import time
+import chardet
 
 import traceback
 from fn import log, db_app, db_wp
@@ -179,8 +179,14 @@ def getArticle(page):
 
         contents = article.select('[class="content"]')
         chans = contents[0].select('a')
-        a1['chan'] = chans[0].text
-        a1['text'] = chans[1].text
+	#print chans[0].text
+        a1['chan'] = ''
+        if len(chans) == 2:
+            print chans[1].text
+            a1['chan'] = chans[0].text
+            a1['text'] = chans[1].text
+        else:
+            a1['text'] = chans[0].text
 
         href = a1['href']
         article_id = os.path.basename(href).split('.')[0]
@@ -194,12 +200,11 @@ def getArticle(page):
 
     return list
 
-
 def get_href(url):
     # "Mozilla/5.0 (Linux; Android 7.1.1; OD103 Build/NMF26F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.83 Mobile Safari/537.36"
     # headers = {'User-Agent': 'Mozilla/5.0 (Linux; Android 7.1.1; OD103 Build/NMF26F) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.83 Mobile Safari/537.36'}
     # response = requests.get(url, headers)
-    #print url
+    # print url
 
     response = requests.get(url)
     html = response.text
@@ -207,7 +212,7 @@ def get_href(url):
 
 def get_href_detail(html):
     soup = BeautifulSoup(html, "html.parser")
-    print type(soup)
+    #print type(soup)
     soup.find('div', {'class': 'post-footer clearfix'}).extract()
     #print soup
 
@@ -260,9 +265,8 @@ def get_href_detail(html):
             for v in vs:
                 print v.attrs['src']
                 video_list.append(v.attrs['src'])
-
-
-    if len(videos) <= 0:
+    ## 普通文章
+    else:
         new_html += "<section class=\"nt-warp nt-warp-nospace\">\n" \
                     "<div class=\"container\">\n"
         cover = soup.findAll('div', {'class': 'suxing post-cover'})
@@ -277,11 +281,19 @@ def get_href_detail(html):
         new_html += add_str
 
         article = soup.select('article')
-        print("article len:%d" % len(article))
+        #print("article len:%d" % len(article))
         for i in xrange(len(article)):
             html_article = article[i].prettify()
             # print html_article
             new_html += html_article
+
+        # 加上作者信息
+        # author-info
+        if new_html.find("author-info") == -1:
+            author_info = soup.find('div', {'class': 'post-author clearfix'})
+            if author_info:
+                new_html += author_info.prettify()
+
         new_html = new_html + '</div>\n</main>\n</div>\n' + '</div>\n</section>\n'
 
     new_html += "</body>"
@@ -328,24 +340,30 @@ def get_href_detail(html):
 
     new_html = new_html.replace("src=\"//v.qq.com", "src=\"https://v.qq.com")
 
-    # #idx1 = new_html.find('<a class="btn-action btn-like')
+    '''
+    idx1 = new_html.find('<a class="btn-action btn-like')
+    print idx1
     # idx1 = new_html.find('<div class="post-footer clearfix">')
     # #print idx1
-    # h1 = new_html[0:idx1-1]
-    # h2 = new_html[idx1:]
+    h1 = new_html[0:idx1]
+    h2 = new_html[idx1:]
 
     # idx_f = new_html.find(footer_text)
     # print idx_f
     # print len(footer_text)
     #
-    # #idx2 = h2.find("</a>")
+    idx2 = h2.find("</a>")
     # # str2 = "下载封面\n</a>\n</p>\n</div>\n</div>\n</div>\n</div>\n</div>\n</div>\n</div>\n</div>"
     # # idx2 = h2.find(str2)
     # # print idx2
-    # # h3 = h2[idx2+len(str2):]
+    #h3 = h2[idx2+len(str2):]
+    h3 = h2[idx2+4:]
     # # ＃h3 = "下载封面"
-    #
-    # nh = h1 + h3
+#
+    nh = h1 + h3
+    '''
+
+    #print new_html
     #print nh
     return new_html, img_list, author_name, video_list
 
@@ -356,6 +374,13 @@ def save_h5(html, article_id):
         f.write(html)
     return "https://www.qicycling.cn/html/_" + str(article_id) + '.html'
 
+def post_to_search(article_id, title, description, h5, author):
+    url = "http://47.97.124.47:8085/qicycling_root/api/solr/saveResource"
+    headers = {'Content-type': 'application/json'}
+    dict = {"resourceId":str(article_id),"title":title,"description":description,"h5url":h5,"publisher":author,"type":"0"}
+    r = requests.post(url, data=json.dumps(dict), headers=headers)
+    print r.text
+    return r
 
 def recordArticle(db_app, articles):
     cursor_app = db_app.get_cursor()
@@ -404,13 +429,16 @@ def recordArticle(db_app, articles):
                     surl = img['url']
                     sql = "INSERT INTO resource_image (resource_id, height, `length`, url) values (%d,%d,%d,'%s')"%(article_id,int(img['width']),int(img['height']),surl)
                     cursor_app.execute(sql)
+
+                # post to
+                post_to_search(article_id, title, description, h5, author)
             else:
                 #print("article_id:%d already exists."%article_id)
                 continue
 
             # 修改赛事类型
             sql2 = "select ter.name, r.`object_id`, tax.taxonomy  from wp_term_taxonomy tax inner join wp_terms ter on ter.`term_id` = tax.term_id" \
-                                " inner join `wp_term_relationships` r on r.`term_taxonomy_id` = tax.`term_taxonomy_id`" \
+                            " inner join `wp_term_relationships` r on r.`term_taxonomy_id` = tax.`term_taxonomy_id`" \
                             " where taxonomy = 'category' and r.`object_id` = %d"%article_id
             cursor_wp.execute(sql2)
             r2 = cursor_wp.fetchone()
@@ -444,14 +472,27 @@ def recordArticle(db_app, articles):
 def redoHtml(articles):
     for article in articles:
         article_id = int(article['article_id'])
+        print article_id
         href = "http://www.qicycling.cn/" + str(article_id) + ".html"
         html, img_list, author, v_list = get_href(href)
         h5 = save_h5(html, article_id)
 
+# url = "http://www.qicycling.cn"
+# getBanner(url)
+#
+# list = getArticle()
+#
+# for info in list:
+#     src = info['src']
+#     href = info['href']
+#     alt = info['alt']
+#     get_href(href)
+#     print alt
 
 if __name__ == '__main__':
     # banner
-
+    #post_to_search(3448, '环阿尔卑斯S5：帕登为巴林美利达车队带来大丰收', '环阿尔卑斯S5：帕登为巴林美利达车队带来大丰收', 'http://www.qicycling.cn/html/_3448.html', 'guyyu')
+    #'''
     banners = getBanner(config.web_url)
     #print banners
     recordBanner(db_app, banners)
@@ -465,10 +506,11 @@ if __name__ == '__main__':
         recordArticle(db_app, articles)
         #redoHtml(articles)
         print("---------------- getArticle page:%d Done."%page)
-
+    #'''
     #print  getArticle(2)
-
-    # html, img_list, author, video_list = get_href('http://www.qicycling.cn/2317.html')
-    # print html
+    # 3696 text
+    # 3366 video
+    #html, img_list, author, video_list = get_href('http://www.qicycling.cn/3696.html')
+    #print html
     # print author
 
