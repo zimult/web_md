@@ -214,6 +214,13 @@ def get_href_detail(html):
     soup = BeautifulSoup(html, "html.parser")
     #print type(soup)
     soup.find('div', {'class': 'post-footer clearfix'}).extract()
+
+    utime = soup.findAll('span', {'class': 'u-time'})
+    len_utime = len(utime)
+    print len_utime
+    for i in range(0, len_utime):
+        soup.find('span', {'class': 'u-time'}).extract()
+    #print soup.prettify()
     #print soup
 
     html_head = soup.head.prettify()
