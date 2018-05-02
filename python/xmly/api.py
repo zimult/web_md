@@ -5,16 +5,19 @@
 
 from flask import Flask
 import config
-import db
-
+#import db
+import requests
+from flask import request, redirect
 
 shorty_api = Flask(__name__)
 
-db_wp = db.DB(config.host, config.user, config.password, config.database_wp)
-db_app = db.DB(config.host, config.user, config.password, config.database_app)
+# db_wp = db.DB(config.host, config.user, config.password, config.database_wp)
+# db_app = db.DB(config.host, config.user, config.password, config.database_app)
 
-@shorty_api.route('/get_cartoon_material', methods=['GET', 'POST'])
-def get_cartoon_material():
+@shorty_api.route('/redirect_uri', methods=['GET', 'POST'])
+def redirect_uri():
+    id = int(request.values.get('id'))
+    print id
     return "haah"
 
 if __name__ == '__main__':
