@@ -1,0 +1,137 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+    <style type="text/css">
+        .sticker {
+
+        }
+        .thumbnail.is-selected {
+            background-color:#428bca
+        }
+    </style>
+    <head>
+        <!--[if IE]>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <![endif]-->
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>上传微信失败的数据</title>
+        <!-- Latest compiled and minified CSS -->
+        
+        <link href="css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="css/jquery.jsonview.min.css" />
+
+        <script type="text/javascript" src="js/jquery-2.1.3.min.js"></script>
+        <script type="text/javascript" src="js/bootstrap.min.js"></script>
+        <script type="text/javascript" src="js/vue.js"></script>
+        <script type="text/javascript" src="js/bootstrap_loading.js"></script>
+        <script src="js/md5.min.js"></script>
+        <script type="text/javascript" src="js/wx-gifs/gif-fail-vue.js"></script>
+        <script type="text/javascript" src="js/bqmm-net.js"></script>
+    </head>
+    <body>
+        <div class="container" id="task_page">
+            <div style="position: fixed;z-index: 99;background:rgba(255, 255, 255, 0.9); border:4px solid #428bca;border-radius: 8px;">
+                <div class="container text-center">
+                </div>
+                <div class="text-center" style="margin-top: 10px;">
+                    <h3>上传微信失败的数据</h3>
+                </div>
+                <div class="row" style="padding-left: 20px;padding-bottom:10px;margin-top:5px;">
+                    <div class="form-inline">
+                 <!--        <div class="form-group" style="margin-right:10px;">
+                            <input type="text" class="form-control" id="id_input_keyword" placeholder="关键词"/>    
+                        </div> -->
+                        <!-- <button id="id-btn-load-images" type="button" class="btn btn-default" style="margin-right:20px;">拉取数据</button> -->
+                        <button id="id-btn-select-all" type="button" class="btn btn-default" style="margin-right: 10px">全选</button>
+                        <button id="id-btn-unselect-all" type="button" class="btn btn-default" style="margin-right: 10px">全不选</button>
+                        <button id="id-btn-reverse-select" type="button" class="btn btn-default" style="margin-right: 10px">反选</button>
+                        <!-- <div class="form-group"  style="margin-right: 10px">
+                            <select class="form-control" id="id-category-selected" style="width: 80px;" onchange="showCategoryValueChanged()">
+                                <option v-for="category in categories">
+                                    {{category.name}}
+                                </option>
+                            </select>
+                        </div> -->
+                    </div>
+                    <div class="form-inline" style="margin-top: 10px;">
+                        <button id="id-btn-edit-textinfo" type="button" class="btn btn-default" style="margin-right:20px;">编辑文案</button>
+                        <!-- <button id="id-btn-edit-tag" type="button" class="btn btn-default" style="margin-right:20px;">编辑关键字</button> -->
+                        <!-- <button id="id-btn-edit-remove" type="button" class="btn btn-danger" style="margin-right:20px;">删除</button>  -->
+                        <span style="font-size: 18px;margin-left:15px;">选中</span>
+                        <span style="color: #d9534f; font-size: 18px">{{selected_count}}</span>
+                        <span style="font-size: 18px">张</span>
+                    </div>
+                </div>
+            </div>
+            <div style="height: 160px; width: 100%"></div>
+
+            <div class="row" style="margin-top:20px;">
+                <sticker v-for="image in task_images" v-bind:src="image">
+                </sticker>
+            </div>
+
+
+            <div class="modal fade" id="edit-tag-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×
+                            </button>
+                            <h4 class="modal-title" id="myModalLabel">
+                                编辑关键字
+                            </h4>
+                        </div>
+                        <div class="modal-body">
+                            <taginput></taginput>
+                            <div style="border: 1px solid #000;min-height: 100px">
+                                <form class="form-inline">
+                                    <taggroupedit v-for="tag in modal_data_tags" v-bind:tag="tag"></taggroupedit>
+                                </form>
+                            </div>
+                            <div style="border: 1px solid #000;min-height: 100px;margin-top: -1px">
+                                <form class="form-inline">
+                                    <taggroupadd v-for="tag in modal_tags_toadd" v-bind:tag="tag"></taggroupadd>
+                                    <taggroupdelete v-for="tag in modal_tags_todel" v-bind:tag="tag"></taggroupdelete>
+                                </form>
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <tagsubmit></tagsubmit>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal fade" id="edit-textinfo-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×
+                            </button>
+                            <h4 class="modal-title" id="myModalLabel">
+                                编辑文案
+                            </h4>
+                        </div>
+                        <div class="modal-body">
+                            <div>
+                                <img v-bind:src="modal_textinfo.store_url"></img>
+                                <textinfomodal v-bind:src="modal_textinfo"></textinfomodal> 
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <textinfosubmit></textinfosubmit>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal fade" id="remove-modal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <deletemodal></deletemodal>
+                </div>
+            </div>
+        </div>
+        <script type="text/javascript" src="js/wx-gifs/fail-gifs.js"></script>
+    </body>
+</html>

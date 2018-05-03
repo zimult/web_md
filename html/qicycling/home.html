@@ -1,0 +1,83 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+    <style type="text/css">
+        .list-group-item.custom {
+            border-style: solid;
+            border-color: #428bca;
+            border-width: 2px;
+            border-radius: 8px;
+        }
+
+    </style>
+    <head>
+        <!--[if IE]>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <![endif]-->
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>Qicycling运营管理工具</title>
+        <!-- Latest compiled and minified CSS -->
+        
+        <link href="css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="css/jquery.jsonview.min.css" />
+        <script type="text/javascript" src="js/jquery-2.1.3.min.js"></script>
+        <script src="js/bootstrap.min.js"></script>
+        <link rel="stylesheet" href="css/bootstrap-datetimepicker.min.css" />
+        <script type="text/javascript" src="js/bootstrap-datetimepicker.min.js"></script>
+        <script type="text/javascript" src="js/bootstrap-datetimepicker.zh-CN.js"></script>
+        <script type="text/javascript" src="js/vue.js"></script>
+    </head>
+    <body>
+        
+        <div class="container" id="main">
+            <div id="login_page">
+                <br/>
+                <h1 class="text-center">Qicycling运营管理工具</h1>
+                <br/>
+            </div>
+            <!-- <div class="text-right" id="login-page">
+                <a class="btn btn-primary" id="login_or_exit">{{username}}</a>
+            </div> -->
+            <div class="container" id="link-list">
+                <div class="row">
+                    <div class="text-center">
+                        <span style="font-size: 18px">APP 数据管理</span>    
+                    </div>
+                    <br>
+                    <div class="col-lg-6">
+                        <div class='list-group'>
+                            <a class='list-group-item link text-center custom' href='qy-daily-add.html'>
+                                <div style="font-size: 24px;color: #428bca">
+                                    添加赛事日历
+                                </div>
+                                <div style="font-size: 16px">
+                                    添加赛事日历
+                                </div>
+                            </a>
+                            <br/>
+                            <br/>                           
+                        </div>                        
+                    </div>
+                    <div class="col-lg-6">
+                        <div class='list-group'>
+                            <a class='list-group-item link text-center custom' href='qy-sync-article.html'>
+                                <div style="font-size: 24px;color: #428bca">
+                                    重新同步文章
+                                </div>
+                                <div style="font-size: 16px">
+                                    重新同步文章 到app
+                                </div>
+                            </a>
+                            <br/>
+                            <br/>
+                        </div>    
+                    </div>
+                </div>
+                <hr/>
+            </div>
+        </div>
+        
+        <!--<script type="text/javascript" src="js/user-login.js"></script>-->
+    </body>
+</html>

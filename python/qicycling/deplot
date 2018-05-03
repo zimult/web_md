@@ -1,0 +1,2 @@
+rsync -avz *.py root@47.97.124.47:/var/www/traveler/
+rsync -avz ../../html/qicycling/* root@47.97.124.47:/var/www/traveler/tools

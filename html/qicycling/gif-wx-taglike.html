@@ -1,0 +1,67 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+    <style type="text/css">
+        .sticker {
+
+        }
+        .thumbnail.is-selected {
+            background-color:#428bca
+        }
+    </style>
+    <head>
+        <!--[if IE]>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <![endif]-->
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>微信数据统计</title>
+        <!-- Latest compiled and minified CSS -->
+        
+        <link href="css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="css/jquery.jsonview.min.css" />
+
+        <script type="text/javascript" src="js/jquery-2.1.3.min.js"></script>
+        <script type="text/javascript" src="js/bootstrap.min.js"></script>
+        <script type="text/javascript" src="js/vue.js"></script>
+        <script type="text/javascript" src="js/bootstrap_loading.js"></script>
+        <script src="js/md5.min.js"></script>
+        <script type="text/javascript" src="js/wx-gifs/gif-taglike-vue.js"></script>
+        <script type="text/javascript" src="js/bqmm-net.js"></script>
+    </head>
+    <body>
+        <div class="container" id="task_page">
+            <div class="text-center" style="margin-top: 10px;">
+                <h3>微信关键词模糊查询</h3>
+            </div>
+            <div class="row">
+                    <div class="form-inline">
+                        <div class="form-group" style="margin-right:10px;">
+                            <input type="text" class="form-control" id="id_input_keyword" placeholder="关键词" searchKey=''/>    
+                        </div>
+                        <input id="id-btn-search-tl" type="button" class="btn btn-default" value="查询" style="margin-right:20px;">
+                    </div>
+            </div>
+ <!--            <div class="row" style="margin-top:20px;">
+                <sticker2 v-bind:src="total"></sticker2>
+            </div> -->
+            <div class="row" style="margin-top:20px;">
+                <sticker v-for="image in list" v-bind:src="image"></sticker>
+            </div>
+
+
+            <!-- <div class="row bg-warning" style="position:absolute;border:1px solid #428bca;left:0;top:100px;bottom:0;right:0;">
+                <div class="col-md-2"></div>
+                <div class="col-md-8">
+                    <div class="text-center">
+                        <ul class="sortable links" id="ip_list">
+                            <iplist v-for="temp in list" v-bind:ip="temp"></iplist>
+                        </ul>
+                    </div>
+                </div>
+                <div class="col-md-2"></div>
+            </div> -->
+        </div>
+        <script type="text/javascript" src="js/wx-gifs/gif-taglike.js"></script>
+    </body>
+</html>

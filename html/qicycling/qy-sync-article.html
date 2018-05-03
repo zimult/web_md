@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<html lang="zh-CN">
+    <style type="text/css">
+        .sticker {
+
+        }
+        .thumbnail.is-selected {
+            background-color:#428bca
+        }
+    </style>
+    <head>
+        <!--[if IE]>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <![endif]-->
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>同步文章</title>
+        <!-- Latest compiled and minified CSS -->
+        
+        <link href="css/bootstrap.min.css" rel="stylesheet">
+        <link rel="stylesheet" href="css/jquery.jsonview.min.css" />
+
+        <script type="text/javascript" src="js/jquery-2.1.3.min.js"></script>
+        <script type="text/javascript" src="js/bootstrap.min.js"></script>
+        <script type="text/javascript" src="js/vue.js"></script>
+        <script type="text/javascript" src="js/bootstrap_loading.js"></script>
+        <script src="js/md5.min.js"></script>
+        <script type="text/javascript" src="js/bqmm-net.js"></script>
+    </head>
+    <body>
+        <div class="container" id="task_page">
+            <div class="text-center" style="margin-top: 10px;">
+                <h3>同步文章</h3>
+            </div>
+
+            <div class="row">
+                    <div class="form-inline">
+                        <div class="form-group" style="margin-right:10px;">
+                            <input type="text" class="form-control" id="id_input_article" placeholder="article_id" maxlength="11" searchKey=''/>    
+                        </div>
+                        <input id="id-btn-sync" type="button" class="btn btn-default" value="重新同步" style="margin-right:20px;">
+                    </div>
+            </div>
+
+        </div>
+        <script type="text/javascript" src="js/qy/sync-article.js"></script>
+    </body>
+</html>
