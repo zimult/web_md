@@ -21,7 +21,7 @@ var _submit = function(url, type, params, callback) {
                 var message = data.error;
                 if (message.indexOf("未登录") > -1) {
                   callback(params, null, "errorCode" + code + " " + message + " , 即将跳转到登录页面");
-                  window.location.href = '../image-tools/user-login.html';
+                  //window.location.href = '../image-tools/user-login.html';
                 } else {
                   callback(params, null, "errorCode" + code + " " + message);
                 }
@@ -29,6 +29,9 @@ var _submit = function(url, type, params, callback) {
         },
         error: function(error) {
             callback(params, null, "errorCode" + error.status + " " + error.statusText);
+        },
+        beforeSend: function(xhr) {
+            xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8");
         },
         dataType: "json"
     });

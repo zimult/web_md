@@ -50,8 +50,8 @@ function _sync_article(article_id, callback)	{
     var params = {
         "article_id": article_id
     };
-    var url = DOMAIN+"/wx/get_keyword_tj";
-    //var url = "http://127.0.0.1:4567"+"/wx/get_keyword_tj";
+    //var url = DOMAIN+"/wx/get_keyword_tj";
+    var url = "http://47.97.124.47:8410"+"/sync_article";
     //提交
-    _submit(url, "GET", params, callback);
+    _submit(url, "POST", params, callback);
 }
