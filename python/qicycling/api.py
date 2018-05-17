@@ -62,5 +62,7 @@ def sync_article():
         print(traceback.format_exc())
         return fmt_response_error(0, '处理失败')
 
+
+
 if __name__ == '__main__':
     shorty_api.run(host='0.0.0.0', port=8410 )

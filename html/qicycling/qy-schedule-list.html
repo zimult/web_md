@@ -15,7 +15,7 @@
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <title>添加比赛日历</title>
+        <title>查看比赛日历</title>
         <!-- Latest compiled and minified CSS -->
         
         <link href="css/bootstrap.min.css" rel="stylesheet">
@@ -37,27 +37,16 @@
             <div class="row">
                     <div class="form-inline">
                         <div class="form-group" style="margin-right:10px;">
-                            <input type="text" class="form-control" id="id_input_title" placeholder="标题" maxlength="128" searchKey=''/>    
+                            <input type="date" class="form-control" id="id_input_ts" searchKey=''/>
                         </div>
                         <div class="form-group" style="margin-right:10px;">
-                            <input type="text" class="form-control" id="id_input_city" placeholder="上海" maxlength="32" searchKey=''/>    
+                            <input type="date" class="form-control" id="id_input_te" searchKey=''/>
                         </div>
-                        <span>日期</span>
-                        <input type="date" class="form-control" id="id_inpu_date" />
-                        <div class="form-group" style="margin-right:10px;">
-                            <input type="text" class="form-control" id="id_input_sd" placeholder="sd" maxlength="8" searchKey=''/>    
-                        </div>
-                        <div class="form-group" style="margin-right:10px;">
-                            <input type="text" class="form-control" id="id_input_gc" placeholder="gc" maxlength="8" searchKey=''/>    
-                        </div>
-                        <div class="form-group" style="margin-right:10px;">
-                            <input type="text" class="form-control" id="id_input_url" placeholder="url" maxlength="128" searchKey=''/>
-                        </div>
-                        <input id="id-btn-add" type="button" class="btn btn-default" value="添加" style="margin-right:20px;">
+                        <input id="id-btn-list" type="button" class="btn btn-default" value="查询" style="margin-right:20px;">
                     </div>
             </div>
 
         </div>
-        <script type="text/javascript" src="js/qy/match_add.js"></script>
+        <script type="text/javascript" src="js/qy/schedule_list.js"></script>
     </body>
 </html>
