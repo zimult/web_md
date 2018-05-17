@@ -74,7 +74,7 @@ if __name__ == '__main__':
             response = s.get(vip_url)
 
             href_html = response.text
-            html, img_list, author, video_list = sync.get_href_detail(href_html)
+            html, img_list, author, video_list, title = sync.get_href_detail(href_html)
             print html
             break
 

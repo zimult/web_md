@@ -32,13 +32,7 @@ if __name__ == '__main__':
     #     print articles
     #     break
 
-    # html, img_list, author, video_list = sync.get_href('http://www.qicycling.cn/4213.html')
-    # print html
+    html, img_list, author, video_list, title = sync.get_href('http://www.qicycling.cn/4919.html')
+    print title
+    #print html
 
-    i= 52
-    j = 5
-
-    tmp = 1
-    for m in xrange(1,i):
-        tmp = m * tmp
-    print tmp

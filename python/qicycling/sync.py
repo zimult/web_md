@@ -227,6 +227,15 @@ def get_href_detail(html):
     html_top = '' + html_head
     # print html_head
 
+    # title = soup.select('title')
+    # print title[0]
+    # print title[0].text.split('')[0]
+
+    title = ''
+    t_ = soup.findAll('meta', {'property': 'og:title'})
+    if len(t_)>0:
+        title = t_[0].get('content')
+
     ######## no data
     # new_html = html_top + '\n' \
     #                       "<body class=\"post-template-default single single-post single-format-standard\">\n" \
@@ -372,7 +381,7 @@ def get_href_detail(html):
 
     #print new_html
     #print nh
-    return new_html, img_list, author_name, video_list
+    return new_html, img_list, author_name, video_list, title
 
 def save_h5(html, article_id):
     filename = config.html_path + str(article_id) + '.html'
@@ -404,7 +413,7 @@ def recordArticle(db_app, articles):
             cursor_app.execute("SELECT status FROM resource where id=%d"%article_id)
             result = cursor_app.fetchone()
             if result is None:
-                html, img_list, author, v_list = get_href(href)
+                html, img_list, author, v_list, t_ = get_href(href)
 
                 # 时间从 db_wp 读取 wp_posts.id =
                 if len(img_list) <= 0:
@@ -444,30 +453,7 @@ def recordArticle(db_app, articles):
                 continue
 
             # 修改赛事类型
-            sql2 = "select ter.name, r.`object_id`, tax.taxonomy  from wp_term_taxonomy tax inner join wp_terms ter on ter.`term_id` = tax.term_id" \
-                            " inner join `wp_term_relationships` r on r.`term_taxonomy_id` = tax.`term_taxonomy_id`" \
-                            " where taxonomy = 'category' and r.`object_id` = %d"%article_id
-            cursor_wp.execute(sql2)
-            r2 = cursor_wp.fetchone()
-            if r2 is None:
-                log.error("------ article:%d not found category")
-            else:
-                name = r2[0]
-                sql = "SELECT id FROM `module` where name='%s'"%name
-                #print sql
-                cursor_app.execute(sql)
-                r = cursor_app.fetchone()
-                if r is not None:
-                    module_id = int(r[0])
-                else:
-                    #
-                    t = time.time()
-                    ts = int(round(t * 1000))
-                    cursor_app.execute("INSERT INTO `module` (status, description, display_order, name, resource_type, parent_id, timestamp)" \
-                                   " values (1, '%s', 20, '%s', 1, 1, %d)" % (name, name, ts))
-                    module_id = int(cursor_app.lastrowid)
-                cursor_app.execute("INSERT INTO module_resource (status, module_id, resource_id, `timestamp`) " \
-                               "VALUES (1, %d, %d, %d)"%(module_id, article_id, ts))
+            add_resource_module(cursor_wp, cursor_app, article_id)
 
         db_app.commit()
         db_wp.commit()
@@ -476,12 +462,40 @@ def recordArticle(db_app, articles):
         log.error(traceback.format_exc())
 
 
-def redoHtml(articles):
+def add_resource_module(cursor_wp, cursor_app, article_id):
+    sql2 = "select ter.name, r.`object_id`, tax.taxonomy  from wp_term_taxonomy tax inner join wp_terms ter on ter.`term_id` = tax.term_id" \
+           " inner join `wp_term_relationships` r on r.`term_taxonomy_id` = tax.`term_taxonomy_id`" \
+           " where taxonomy = 'category' and r.`object_id` = %d" % article_id
+    cursor_wp.execute(sql2)
+    r2 = cursor_wp.fetchone()
+    if r2 is None:
+        log.error("------ article:%d not found category")
+    else:
+        name = r2[0]
+        sql = "SELECT id FROM `module` where name='%s'" % name
+        # print sql
+        cursor_app.execute(sql)
+        r = cursor_app.fetchone()
+        if r is not None:
+            module_id = int(r[0])
+        else:
+            #
+            t = time.time()
+            ts = int(round(t * 1000))
+            cursor_app.execute(
+                "INSERT INTO `module` (status, description, display_order, name, resource_type, parent_id, timestamp)" \
+                " values (1, '%s', 20, '%s', 1, 1, %d)" % (name, name, ts))
+            module_id = int(cursor_app.lastrowid)
+        cursor_app.execute("INSERT INTO module_resource (status, module_id, resource_id, `timestamp`) " \
+                           "VALUES (1, %d, %d, %d)" % (module_id, article_id, ts))
+
+
+def redo_html(articles):
     for article in articles:
         article_id = int(article['article_id'])
         print article_id
         href = "http://www.qicycling.cn/" + str(article_id) + ".html"
-        html, img_list, author, v_list = get_href(href)
+        html, img_list, author, v_list, t_ = get_href(href)
         h5 = save_h5(html, article_id)
 
 # url = "http://www.qicycling.cn"
@@ -511,7 +525,7 @@ if __name__ == '__main__':
         if len(articles) <= 0:
             break
         recordArticle(db_app, articles)
-        #redoHtml(articles)
+        #redo_html(articles)
         print("---------------- getArticle page:%d Done."%page)
     #'''
     #print  getArticle(2)
