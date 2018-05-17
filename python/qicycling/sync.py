@@ -127,7 +127,9 @@ def recordBanner(db_app, banners):
                 if result is None:
                     t = time.time()
                     ts = int(round(t * 1000))
-                    cursor.execute("INSERT INTO resource_banner (status, `timestamp`, `position`, resource_id) values (1, %d,%d,%d)"%(ts,module,banner))
+                    sql = "INSERT INTO resource_banner (status, `timestamp`, `position`, resource_id) values (1, %d,%d,%d)"%(ts,module,banner)
+                    print sql
+                    cursor.execute(sql)
                 else:
                     print "banner exists ..."
 
@@ -161,7 +163,11 @@ def getArticle(page):
     #articles = soup.select('[class="image"]')
     articles = soup.select('article')
     for article in articles:
-        #print article
+        # print "*" * 12
+        # print article.attrs['class']
+        # print len(article.attrs['class'])
+        if len(article.attrs['class']) > 2:
+            continue
 
         images = article.select('[class="image"]')
         image = images[0]
@@ -408,7 +414,7 @@ def recordArticle(db_app, articles):
             title = article['alt']
             description = article['text']
             href = article['href']
-            #print("--------- todo article:%d"%article_id)
+            print("--------- todo article:%d"%article_id)
 
             cursor_app.execute("SELECT status FROM resource where id=%d"%article_id)
             result = cursor_app.fetchone()
@@ -455,6 +461,8 @@ def recordArticle(db_app, articles):
             # 修改赛事类型
             add_resource_module(cursor_wp, cursor_app, article_id)
 
+            print("--------- done article:%d" % article_id)
+
         db_app.commit()
         db_wp.commit()
     except Exception, e:
@@ -476,12 +484,12 @@ def add_resource_module(cursor_wp, cursor_app, article_id):
         # print sql
         cursor_app.execute(sql)
         r = cursor_app.fetchone()
+        t = time.time()
+        ts = int(round(t * 1000))
         if r is not None:
             module_id = int(r[0])
         else:
             #
-            t = time.time()
-            ts = int(round(t * 1000))
             cursor_app.execute(
                 "INSERT INTO `module` (status, description, display_order, name, resource_type, parent_id, timestamp)" \
                 " values (1, '%s', 20, '%s', 1, 1, %d)" % (name, name, ts))
@@ -514,10 +522,6 @@ if __name__ == '__main__':
     # banner
     #post_to_search(3448, '环阿尔卑斯S5：帕登为巴林美利达车队带来大丰收', '环阿尔卑斯S5：帕登为巴林美利达车队带来大丰收', 'http://www.qicycling.cn/html/_3448.html', 'guyyu')
     #'''
-    banners = getBanner(config.web_url)
-    #print banners
-    recordBanner(db_app, banners)
-
     page = 0
     while(True):
         page += 1
@@ -527,6 +531,10 @@ if __name__ == '__main__':
         recordArticle(db_app, articles)
         #redo_html(articles)
         print("---------------- getArticle page:%d Done."%page)
+
+    banners = getBanner(config.web_url)
+    print banners
+    recordBanner(db_app, banners)
     #'''
     #print  getArticle(2)
     # 3696 text
