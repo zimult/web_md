@@ -122,12 +122,16 @@ def recordBanner(db_app, banners):
         for bn in banners:
             banner = int(bn)
             for module in modules:
+                status = 0
+                if module == 9:
+                    status = 1
+
                 cursor.execute("SELECT id FROM resource_banner where `position`=%d and resource_id=%d"%(module, banner))
                 result = cursor.fetchone()
                 if result is None:
                     t = time.time()
                     ts = int(round(t * 1000))
-                    sql = "INSERT INTO resource_banner (status, `timestamp`, `position`, resource_id) values (1, %d,%d,%d)"%(ts,module,banner)
+                    sql = "INSERT INTO resource_banner (status, `timestamp`, `position`, resource_id) values (%d, %d,%d,%d)"%(status,ts,module,banner)
                     print sql
                     cursor.execute(sql)
                 else:
