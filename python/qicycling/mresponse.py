@@ -14,8 +14,13 @@ class CJsonEncoder(json.JSONEncoder):
             return json.JSONEncoder.default(self, obj)
 
 def fmt_response(data):
-    result = {'code': 0, 'result': data, 'error': ''}
-    return json.dumps(result, ensure_ascii=False, cls=CJsonEncoder)
+    result = {'code': 1, 'result': data, 'error': ''}
+    #return json.dumps(result, ensure_ascii=False, cls=CJsonEncoder)
+    res = make_response(json.dumps(result, ensure_ascii=False, cls=CJsonEncoder))
+    res.headers['Access-Control-Allow-Origin'] = '*'
+    res.headers['Access-Control-Allow-Methods'] = 'POST'
+    res.headers['Access-Control-Allow-Headers'] = 'x-requested-with,content-type'
+    return res
 
 def fmt_response_error(code, error, result=None):
     if result == None:

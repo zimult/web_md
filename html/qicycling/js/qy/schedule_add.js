@@ -32,7 +32,7 @@ function addMatch() {
     sd = $('#id_input_sd').val().trim()
     gc = $('#id_input_gc').val().trim()
     url = $('#id_input_url').val().trim()
-    if (title.length == 0 || date == '' || city.length == 0) {
+    if (title.length == 0 || date == '' || city.length == 0 || sd.length <= 0 || gc.length <= 0) {
        alert("请完成输入数据");
        return;
     }
@@ -51,17 +51,17 @@ function add_match(title, date, city, sd, gc, url) {
     })
 }
 
-function _add_match(title, date, city, sd, gc, url, callback)	{
+function _add_match(title, date, city, sd, gc, zb_url, callback)	{
     var params = {
         "title": title,
         "date": date,
         "city": city,
         "sd": sd,
         "gc": gc,
-        "url": url
+        "url": zb_url
     };
-    var url = DOMAIN+"/wx/get_keyword_tj";
+    var url = "http://47.97.124.47:8410"+"/add_match";
     //var url = "http://127.0.0.1:4567"+"/wx/get_keyword_tj";
     //提交
-    _submit(url, "GET", params, callback);
+    _submit(url, "POST", params, callback);
 }
