@@ -1,10 +1,12 @@
 var tasks = new Vue({
     el: '#task_page',
     data: {
-        match_list: [],
+        schedule_list: [],
     },
     methods: {
-        
+	del_schedule:function(id) {
+		del_match(id)
+	}
     }
 });
 
@@ -34,12 +36,14 @@ function listMatch() {
 
 function list_match(st,et) {
 	waitingDialog.show("查询中...");
+	tasks.schedule_list = []
 	_list_match(st, et, function(params, data, error){
         waitingDialog.hide()
         if (error) {	
             alert(error)
         } else {
-            //alert("同步成功")
+            console.log(data.result)
+            tasks.schedule_list = data.result
         }
     })
 }
@@ -53,4 +57,15 @@ function _list_match(st, et, callback)	{
     var url = "http://47.97.124.47:8410"+"/list_match";
     //提交
     _submit(url, "POST", params, callback);
+}
+
+function del_match(id) {
+    var params = {
+        "id": id
+    };
+    var url = "http://47.97.124.47:8410"+"/del_match";
+    console.log(url + " ?id:" +id)
+    //提交
+    //_submit(url, "POST", params, callback);
+    $.post(url, params, function (text, status) { alert(text); });
 }

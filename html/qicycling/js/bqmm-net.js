@@ -14,21 +14,24 @@ var _submit = function(url, type, params, callback) {
         data: params,
         url: url,
         success: function(data) {
+            //alert(data)
             var code = data.code
+            //alert(code)
             if (code == 1) {
                 callback(params, data, null);
             }else {
                 var message = data.error;
                 if (message.indexOf("未登录") > -1) {
-                  callback(params, null, "errorCode" + code + " " + message + " , 即将跳转到登录页面");
+                  callback(params, null, "errorCode1:" + code + " " + message + " , 即将跳转到登录页面");
                   //window.location.href = '../image-tools/user-login.html';
                 } else {
-                  callback(params, null, "errorCode" + code + " " + message);
+                  callback(params, null, "errorCode2:" + code + " |" + message);
                 }
             }
         },
         error: function(error) {
-            callback(params, null, "errorCode" + error.status + " " + error.statusText);
+            alert(error)
+            callback(params, null, "errorCode3:" + error.status + " " + error.statusText);
         },
         beforeSend: function(xhr) {
             xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded;charset=UTF-8");

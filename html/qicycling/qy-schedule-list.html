@@ -1,13 +1,13 @@
 <!DOCTYPE HTML>
 <html lang="zh-CN">
-    <style type="text/css">
-        .sticker {
+    <!--<style type="text/css">-->
+        <!--.sticker {-->
 
-        }
-        .thumbnail.is-selected {
-            background-color:#428bca
-        }
-    </style>
+        <!--}-->
+        <!--.thumbnail.is-selected {-->
+            <!--background-color:#428bca-->
+        <!--}-->
+    <!--</style>-->
     <head>
         <!--[if IE]>
         <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
@@ -37,16 +37,53 @@
             <div class="row">
                     <div class="form-inline">
                         <div class="form-group" style="margin-right:10px;">
-                            <input type="date" class="form-control" id="id_input_ts" searchKey=''/>
+                            <input type="date" class="form-control" id="id_input_st" searchKey=''/>
                         </div>
                         <div class="form-group" style="margin-right:10px;">
-                            <input type="date" class="form-control" id="id_input_te" searchKey=''/>
+                            <input type="date" class="form-control" id="id_input_et" searchKey=''/>
                         </div>
                         <input id="id-btn-list" type="button" class="btn btn-default" value="查询" style="margin-right:20px;">
                     </div>
             </div>
 
+            <!--<div class="row" style="margin-top:20px;">-->
+                <!--<sticker v-for="schedule in schedule_list" v-bind:src="schedule"></sticker>-->
+            <!--</div>-->
+            <div style="padding:20px;" id="app">
+                <div class="panel panel-primary">
+                    <div class="panel-heading">用户管理</div>
+                    <table class="table table-bordered table-striped text-center">
+                        <thead>
+                            <tr>
+                                <th>序号</th>
+                                <th>id</th>
+                                <th>日期</th>
+                                <th>标题</th>
+                                <th>rackinger</th>
+                                <th>area</th>
+                                <th>leg</th>
+                                <th>直播</th>
+                                <th>操作</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr key='aTable' v-for="(src,index) in schedule_list">
+                              <td>{{index+1}}</td>
+                              <td>{{src.id}}</td>
+                              <td>{{src.date}}</td>
+                              <td>{{src.title}}</td>
+                              <td>{{src.rackinger}}</td>
+                              <td>{{src.area}}</td>
+                              <td>{{src.leg}}</td>
+                              <td>{{src.url}}</td>
+                              <td><a href="javascript:;" @click="del_schedule(src.id)">删除</a></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
         <script type="text/javascript" src="js/qy/schedule_list.js"></script>
+        <!--<script type="text/javascript" src="js/qy/schedule_list_vue.js"></script>-->
     </body>
 </html>
