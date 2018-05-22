@@ -67,7 +67,7 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr key='aTable' v-for="(src,index) in schedule_list">
+                            <tr v-for ="(src,index) in schedule_list">
                               <td>{{index+1}}</td>
                               <td>{{src.id}}</td>
                               <td>{{src.date}}</td>
@@ -76,6 +76,7 @@
                               <td>{{src.area}}</td>
                               <td>{{src.leg}}</td>
                               <td>{{src.url}}</td>
+
                               <td><a href="javascript:;" @click="del_schedule(src.id)">删除</a></td>
                             </tr>
                         </tbody>

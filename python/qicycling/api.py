@@ -150,6 +150,15 @@ def del_match():
         print(traceback.format_exc())
         return fmt_response_error(0, '处理失败')
 
+        db_app.commit()
+        print list
+        return fmt_response(list)
+    except Exception, e:
+        db_app.rollback()
+        #db_wp.rollback()
+        print(e.message)
+        print(traceback.format_exc())
+        return fmt_response_error(0, '处理失败')
 
 if __name__ == '__main__':
     shorty_api.run(host='0.0.0.0', port=8410 )

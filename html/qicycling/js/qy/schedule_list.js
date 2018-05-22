@@ -4,9 +4,9 @@ var tasks = new Vue({
         schedule_list: [],
     },
     methods: {
-	del_schedule:function(id) {
-		del_match(id)
-	}
+        del_schedule:function(id) {
+            del_match(id)
+        }
     }
 });
 
@@ -69,3 +69,4 @@ function del_match(id) {
     //_submit(url, "POST", params, callback);
     $.post(url, params, function (text, status) { alert(text); });
 }
+
