@@ -99,7 +99,7 @@ class AliPay(object):
         quoted_string = "&".join("{0}=\"{1}\"".format(k, quote_plus(v)) for k, v in ordered_items)
         # 获得最终的订单信息字符串
         signed_string = quoted_string + "&sign=" + quote_plus(sign)
-        return signed_string
+        return signed_string, sign
 
     def ordered_data(self, data):
         complex_keys = []
@@ -134,13 +134,13 @@ class AliPay(object):
     def _verify(self, raw_content, signature):
         # 开始计算签名
         key = self.alipay_public_key
-        # signer = PKCS1_v1_5.new(key)
-        # digest = SHA256.new()
-        # digest.update(raw_content.encode("utf8"))
-        # print raw_content
-        # print digest
-        # if signer.verify(digest, decodebytes(signature.encode("utf8"))):
-        #      return True
+        signer = PKCS1_v1_5.new(key)
+        digest = SHA256.new()
+        digest.update(raw_content.encode("utf8"))
+        dc = base64.b64decode(signature.encode("utf8"))
+        print dc
+        if signer.verify(digest, dc):
+             return True
         return False
 
     def verify(self, data, signature):
@@ -164,6 +164,7 @@ if __name__ == "__main__":
         app_notify_url="http://projectsedus.com/",
         app_private_key_path="./app_private_key_2048.txt",
         alipay_public_key_path="./alipay_public_key_sha256.txt",
+        #alipay_public_key_path="./app_public_key_2048.txt",
         # 支付宝的公钥，验证支付宝回传消息使用，不是你自己的公钥,
         debug=True,  # 默认False,
         return_url=""
@@ -176,11 +177,10 @@ if __name__ == "__main__":
     ali_sign = query.pop("sign")[0]
     for key, value in query.items():
         processed_query[key] = value[0]
-    alipay.sign_data(processed_query)
-
+    sign_str, sign_s = alipay.sign_data(processed_query)
 
     #
-    # print(alipay.verify(processed_query, ali_sign))
+    print(alipay.verify(processed_query, sign_s))
 
     # url = alipay.direct_pay(
     #     subject="Iphone6 16G",
