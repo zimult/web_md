@@ -177,6 +177,7 @@ if __name__ == "__main__":
     ali_sign = query.pop("sign")[0]
     for key, value in query.items():
         processed_query[key] = value[0]
+    print type(processed_query)
     sign_str, sign_s = alipay.sign_data(processed_query)
 
     #

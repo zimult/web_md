@@ -3,7 +3,6 @@
 
 import requests
 import json
-import time
 from bs4 import BeautifulSoup
 from bs4 import NavigableString
 import config
@@ -66,15 +65,51 @@ if __name__ == '__main__':
     with requests.Session() as s:
         login()
 
-        for article_id in list:
-            if check_article_in_app(cursor_app, article_id) == True:
-                break
+        # for article_id in list:
+        #     if check_article_in_app(cursor_app, article_id) == True:
+        #         break
+        #
+        #     vip_url = "http://www.qicycling.cn/%d.html"%article_id
+        #     response = s.get(vip_url)
+        #
+        #     href_html = response.text
+        #     html, img_list, author, video_list, title = sync.get_href_detail(href_html)
+        #     print html
+        #     break
 
-            vip_url = "http://www.qicycling.cn/%d.html"%article_id
-            response = s.get(vip_url)
+        article_id = int(sys.argv[1])
+        print type(article_id)
+        print(article_id)
+        vip_url = "http://www.qicycling.cn/%d.html" % article_id
+        response = s.get(vip_url)
+        href_html = response.text
+        html, img_list, author, video_list, title = sync.get_href_detail(href_html)
+        h5 = sync.save_h5(html, article_id)
+        description = title
+        t = time.time()
+        ts = int(round(t * 1000))
 
-            href_html = response.text
-            html, img_list, author, video_list, title = sync.get_href_detail(href_html)
-            print html
-            break
+        # 修改title
+        sql = "INSERT INTO resource (id, title, description, status, h5url, is_vip, publisher, type,TIMESTAMP)" \
+              " VALUES (%d, '%s', '%s', 1, '%s', 1, '%s', 0, %d)" % (
+              article_id, title, description, h5, author, ts * 1000)
+        #sql = "UPDATE resource set title='%s', description='%s' where id=%d" % (title, title, article_id)
+        print sql
+        cursor_app.execute(sql)
 
+        cursor_app.execute("DELETE FROM resource_image where resource_id=%d" % article_id)
+        for i in xrange(len(img_list)):
+            img = img_list[i]
+            # surl = quote(img['url'])
+            surl = img['url']
+            sql = "INSERT INTO resource_image (resource_id, height, `length`, url) values (%d,%d,%d,'%s')" % (
+                article_id, int(img['width']), int(img['height']), surl)
+            cursor_app.execute(sql)
+
+        cursor_app.execute("DELETE FROM module_resource where resource_id=%d" % article_id)
+        sync.add_resource_module(cursor_wp, cursor_app, article_id)
+
+        #print html
+
+    db_app.commit()
+    db_wp.commit()

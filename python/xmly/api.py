@@ -11,6 +11,7 @@ from flask import request, redirect
 import urllib, urllib2
 import json
 import sys
+from ali.alipay import *
 
 requests.packages.urllib3.disable_warnings()
 reload(sys)
@@ -94,11 +95,55 @@ def redirect_uri():
     print rt
     return rt
 
-    #return "haah"
+
+def get_trade_no():
+    return "123456"
+
+
+@shorty_api.route('/ali_order', methods=['GET', 'POST'])
+def ali_order():
+    #state = request.values.get('state')
+    alipay = AliPay(
+        appid="2018052160236073",
+        app_notify_url="http://projectsedus.com/",
+        app_private_key_path="ali/app_private_key_2048.txt",
+        alipay_public_key_path="ali/alipay_public_key_sha256.txt",
+        # alipay_public_key_path="./app_public_key_2048.txt",
+        # 支付宝的公钥，验证支付宝回传消息使用，不是你自己的公钥,
+        debug=True,  # 默认False,
+        return_url=""
+    )
+    out_trade_no = get_trade_no()
+    subject = request.values.get('subject')
+    total_fee = request.values.get('total_fee')
+    item_desc = request.values.get('item_desc')
+    data = {}
+    data['partner']='2018052160236073'
+    data['service'] = 'mobile.securitypay.pay'
+    data['_input_charset'] = 'UTF-8'
+    data['sign_type'] = 'RSA'
+    data['notify_url'] = 'https://app.yuan7dan.com/alipay/notify'
+    data['app_id'] = 'app_id'
+    data['out_trade_no'] = out_trade_no
+    data['subject'] = subject
+    data['payment_type'] = '1'
+    data['seller_id'] = '2088421398130544'
+    data['total_fee'] = str(total_fee)
+    data['body'] = item_desc
+
+
+    print type(data)
+
+    sign_str, sign_s = alipay.sign_data(data)
+
+    return sign_s
+
 
 @shorty_api.route('/test_xmly', methods=['GET', 'POST'])
 def test_xmly():
     return "test ok! xmly"
+
+
 
 if __name__ == '__main__':
     shorty_api.run(host='0.0.0.0', port=8000 )
