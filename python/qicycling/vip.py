@@ -64,7 +64,6 @@ if __name__ == '__main__':
 
     with requests.Session() as s:
         login()
-
         # for article_id in list:
         #     if check_article_in_app(cursor_app, article_id) == True:
         #         break
@@ -90,11 +89,16 @@ if __name__ == '__main__':
         ts = int(round(t * 1000))
 
         # 修改title
-        sql = "INSERT INTO resource (id, title, description, status, h5url, is_vip, publisher, type,TIMESTAMP)" \
-              " VALUES (%d, '%s', '%s', 1, '%s', 1, '%s', 0, %d)" % (
-              article_id, title, description, h5, author, ts * 1000)
-        #sql = "UPDATE resource set title='%s', description='%s' where id=%d" % (title, title, article_id)
-        print sql
+        cursor_app.execute("SELECT id from resource where id=%d" % article_id)
+        result = cursor_app.fetchone()
+        if result is None:
+            sql = "INSERT INTO resource (id, title, description, status, h5url, is_vip, publisher, type,TIMESTAMP)" \
+                " VALUES (%d, '%s', '%s', 1, '%s', 1, '%s', 0, %d)" % (
+                article_id, title, description, h5, author, ts * 1000)
+        else:
+            sql = "UPDATE resource set title='%s', description='%s', is_vip=1 where id=%d" % (title, title, article_id)
+
+        #print sql
         cursor_app.execute(sql)
 
         cursor_app.execute("DELETE FROM resource_image where resource_id=%d" % article_id)

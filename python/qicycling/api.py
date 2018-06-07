@@ -11,6 +11,7 @@ import sync
 from mresponse import *
 import traceback
 import time
+import os
 
 shorty_api = Flask(__name__)
 
@@ -153,12 +154,36 @@ def del_match():
         db_app.commit()
         print list
         return fmt_response(list)
+
+
+@shorty_api.route('/sync_vip', methods=['GET', 'POST', 'OPTIONS'])
+def sync_vip():
+    try:
+        article_id = int(request.values.get('article_id'))
+        cursor_app = db_app.get_cursor()
+        cursor_wp = db_wp.get_cursor()
+
+        # check if article_id is vip
+        sql = "SELECT * from wp_posts where `id`=%d and post_type='post' and post_status='private'"%article_id
+        print sql
+        cursor_wp.execute(sql)
+        result = cursor_wp.fetchone()
+        if result is None:
+            return fmt_response_error(501, '不是VIP文章类型')
+
+        cmd = "/var/www/traveler/qyc/vip.sh %d"%article_id
+        os.system(cmd)
+        db_app.commit()
+        db_wp.commit()
+        return fmt_response("success")
     except Exception, e:
         db_app.rollback()
-        #db_wp.rollback()
+        # db_wp.rollback()
         print(e.message)
         print(traceback.format_exc())
         return fmt_response_error(0, '处理失败')
+
+
 
 if __name__ == '__main__':
     shorty_api.run(host='0.0.0.0', port=8410 )
