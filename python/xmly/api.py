@@ -7,11 +7,14 @@ from flask import Flask
 import config
 #import db
 import requests
+import time
 from flask import request, redirect
 import urllib, urllib2
 import json
 import sys
 from ali.alipay import *
+from util.tools import *
+from xmly_sign import get_sign
 
 requests.packages.urllib3.disable_warnings()
 reload(sys)
@@ -142,6 +145,27 @@ def ali_order():
 @shorty_api.route('/test_xmly', methods=['GET', 'POST'])
 def test_xmly():
     return "test ok! xmly"
+
+
+@shorty_api.route('/all_paid_albums', methods=['GET', 'POST'])
+def all_paid_albums():
+    url = "https://api.ximalaya.com/open_pay/all_paid_albums"
+    ts = int(round(time.time() * 1000))
+    params = {
+        'page':1,
+        'count':20,
+        'app_key':'b617866c20482d133d5de66fceb37da3',
+        'client_os_type':4,
+        'nonce':'a3878a1a361229e0a34eb9931d229e69',
+        'timestamp':ts
+    }
+    sign = get_sign(params)
+    params['sig'] = sign
+    print params
+    res = requests.get(url, params)
+    print res.status_code, res.text
+
+    return res.text
 
 
 
