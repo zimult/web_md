@@ -29,6 +29,9 @@
         <script type="text/javascript" src="js/bqmm-net.js"></script>
     </head>
     <body>
+        <script>
+            //document.getElementById("bbb").href = 'C.html?name='+a+'&time='+b;
+        </script>
         <div class="container" id="task_page">
             <div class="text-center" style="margin-top: 10px;">
                 <h3>查看比赛日历</h3>
@@ -77,7 +80,8 @@
                               <td>{{src.leg}}</td>
                               <td>{{src.url}}</td>
 
-                              <td><a href="javascript:;" @click="del_schedule(src.id)">删除</a></td>
+                              <td><a href="qy-schedule-update.html?id=">修改</a>
+                                  <a href="javascript:;" @click="del_schedule(src.id)">删除</a></td>
                             </tr>
                         </tbody>
                     </table>

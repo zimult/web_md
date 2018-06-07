@@ -32,7 +32,7 @@ function addMatch() {
     sd = $('#id_input_sd').val().trim()
     gc = $('#id_input_gc').val().trim()
     url = $('#id_input_url').val().trim()
-    if (title.length == 0 || date == '' || city.length == 0 || sd.length <= 0 || gc.length <= 0) {
+    if (title.length == 0 || date == '' || city.length == 0 ) {
        alert("请完成输入数据");
        return;
     }
