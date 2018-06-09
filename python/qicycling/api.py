@@ -183,6 +183,27 @@ def sync_vip():
         print(traceback.format_exc())
         return fmt_response_error(0, '处理失败')
 
+@shorty_api.route('/delete_article', methods=['POST'])
+def delete_article():
+    try:
+        article_id = int(request.values.get('article_id'))
+        cursor_app = db_app.get_cursor()
+        cursor_wp = db_wp.get_cursor()
+        cursor_app.execute("delete from resource_banner where resource_id =%d"%article_id)
+        cursor_app.execute("delete from resource_image where resource_id =%d"%article_id)
+        cursor_app.execute("delete from module_resource where resource_id =%d"%article_id)
+        cursor_app.execute("delete from resource_praise where resource_id =%d"%article_id)
+        cursor_app.execute("delete from resource_collection where resource_id =%d"%article_id)
+        cursor_app.execute("delete from resource where id =%d"%article_id)
+        db_app.commit()
+        db_wp.commit()
+        return fmt_response("success")
+    except Exception, e:
+        db_app.rollback()
+        # db_wp.rollback()
+        print(e.message)
+        print(traceback.format_exc())
+        return fmt_response_error(0, '处理失败')
 
 
 if __name__ == '__main__':

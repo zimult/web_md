@@ -53,6 +53,8 @@ def check_article_in_app(cursor, article_id):
         return False
     return True
 
+
+
 if __name__ == '__main__':
     # s = ''
     # html, img_list, author, video_list = sync.get_href('http://www.qicycling.cn/2927.html')
@@ -61,6 +63,9 @@ if __name__ == '__main__':
     cursor_wp = db_wp.get_cursor()
     cursor_app = db_app.get_cursor()
     list = get_private_article(cursor_wp)
+
+    vip_url = ["http://www.qicycling.cn/category/report",
+               "http://www.qicycling.cn/category/deep"]
 
     with requests.Session() as s:
         login()
@@ -83,7 +88,9 @@ if __name__ == '__main__':
         response = s.get(vip_url)
         href_html = response.text
         html, img_list, author, video_list, title = sync.get_href_detail(href_html)
-        h5 = sync.save_h5(html, article_id)
+        html_n = html.replace('私密：', '')
+        title = title.replace('私密：', '')
+        h5 = sync.save_h5(html_n, article_id)
         description = title
         t = time.time()
         ts = int(round(t * 1000))

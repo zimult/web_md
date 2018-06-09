@@ -6,6 +6,10 @@ var tasks = new Vue({
     methods: {
         del_schedule:function(id) {
             del_match(id)
+        },
+
+        update_schedule:function(id) {
+            update_match(id)
         }
     }
 });
