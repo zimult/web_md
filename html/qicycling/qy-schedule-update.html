@@ -29,6 +29,16 @@
         <script type="text/javascript" src="js/bqmm-net.js"></script>
     </head>
     <body>
+        <script type="text/javascript">
+            //document.getElementById("bbb").href = 'C.html?name='+a+'&time='+b;
+            function GetQueryString(name)
+            {
+                 var reg = new RegExp("(^|&)"+ name +"=([^&]*)(&|$)");
+                 var r = window.location.search.substr(1).match(reg);
+                 if(r!=null)return  unescape(r[2]); return null;
+            }
+            alert(GetQueryString("id"));
+        </script>
         <div class="container" id="task_page">
             <div class="text-center" style="margin-top: 10px;">
                 <h3>修改比赛日历</h3>
