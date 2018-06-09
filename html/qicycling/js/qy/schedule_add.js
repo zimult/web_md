@@ -32,16 +32,17 @@ function addMatch() {
     sd = $('#id_input_sd').val().trim()
     gc = $('#id_input_gc').val().trim()
     url = $('#id_input_url').val().trim()
+    live_url = $('#id_input_liveurl').val().trim()
     if (title.length == 0 || date == '' || city.length == 0 ) {
        alert("请完成输入数据");
        return;
     }
-    add_match(title, date, city, sd, gc, url)
+    add_match(title, date, city, sd, gc, url,live_url)
 };
 
-function add_match(title, date, city, sd, gc, url) {
+function add_match(title, date, city, sd, gc, url, live_url) {
 	waitingDialog.show("查询中...");
-	_add_match(title, date, city, sd, gc, url, function(params, data, error){
+	_add_match(title, date, city, sd, gc, url, live_url, function(params, data, error){
         waitingDialog.hide()
         if (error) {	
             alert(error)
@@ -51,14 +52,15 @@ function add_match(title, date, city, sd, gc, url) {
     })
 }
 
-function _add_match(title, date, city, sd, gc, zb_url, callback)	{
+function _add_match(title, date, city, sd, gc, z_url, l_url, callback)	{
     var params = {
         "title": title,
         "date": date,
         "city": city,
         "sd": sd,
         "gc": gc,
-        "url": zb_url
+        "url": z_url,
+        "live_url": l_url
     };
     var url = "http://47.97.124.47:8410"+"/add_match";
     //var url = "http://127.0.0.1:4567"+"/wx/get_keyword_tj";

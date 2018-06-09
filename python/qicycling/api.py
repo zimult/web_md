@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-#import logging
-#from logging.handlers import TimedRotatingFileHandler
+# import logging
+# from logging.handlers import TimedRotatingFileHandler
 
 from flask import Flask
 import config
@@ -31,7 +31,7 @@ def sync_article():
         # cursor.execute("DELETE FROM resource where id=%d"%article_id)
         # cursor.execute("DELETE FROM resource_image where resource_id=%d"%article_id)
         # cursor.execute("DELETE FROM module_resource where resource_id=%d"%article_id)
-        url = "http://www.qicycling.cn/%d.html"%article_id
+        url = "http://www.qicycling.cn/%d.html" % article_id
         html, img_list, author, v_list, title = sync.get_href(url)
         h5 = sync.save_h5(html, article_id)
 
@@ -39,7 +39,7 @@ def sync_article():
         # sql = "INSERT INTO resource (id, title, description, status, h5url, is_vip, publisher, type,TIMESTAMP)" \
         #       " VALUES (%d, '%s', '%s', 1, '%s', 0, '%s', 0, %d)" % (
         #       article_id, title, description, h5, author, ts * 1000)
-        sql = "UPDATE resource set title='%s', description='%s' where id=%d"%(title, title, article_id)
+        sql = "UPDATE resource set title='%s', description='%s' where id=%d" % (title, title, article_id)
         print sql
         cursor_app.execute(sql)
 
@@ -49,7 +49,7 @@ def sync_article():
             # surl = quote(img['url'])
             surl = img['url']
             sql = "INSERT INTO resource_image (resource_id, height, `length`, url) values (%d,%d,%d,'%s')" % (
-            article_id, int(img['width']), int(img['height']), surl)
+                article_id, int(img['width']), int(img['height']), surl)
             cursor_app.execute(sql)
 
         cursor_app.execute("DELETE FROM module_resource where resource_id=%d" % article_id)
@@ -57,7 +57,7 @@ def sync_article():
 
         db_app.commit()
         db_wp.commit()
-        rt = {'code': 1, 'result':article_id}
+        rt = {'code': 1, 'result': article_id}
         return fmt_response(rt)
     except Exception, e:
         db_app.rollback()
@@ -66,41 +66,60 @@ def sync_article():
         print(traceback.format_exc())
         return fmt_response_error(0, '处理失败')
 
+
 @shorty_api.route('/add_match', methods=['GET', 'POST', 'OPTIONS'])
 def add_match():
     try:
         #
+        print request.values
         title = request.values.get('title')
         date = request.values.get('date') + " 00:00:00"
         city = request.values.get('city')
-        sd = request.values.get('sd')
-        gc = request.values.get('gc')
-        url = request.values.get('url')
+        print title, date, city
 
+        sd = ''
+        if request.values.has_key('sd'):
+            sd = request.values.get('sd')
+        print("sd:" + sd)
+        gc = ''
+        if request.values.has_key('gc'):
+            gc = request.values.get('gc')
+        print("gc:" + gc)
+        url = ''
+        if request.values.has_key('url'):
+            url = request.values.get('url')
+        print("url:" + url)
+        live_url = ''
+        if request.values.has_key('live_url'):
+            live_url = request.values.get('live_url')
+        print("live_url:" + live_url)
+
+        print title, date, city, sd, gc, url
         # 增加数据
+        print "------1"
         cursor_app = db_app.get_cursor()
-        #cursor_wp = db_wp.get_cursor()
+        print "------2"
+        # cursor_wp = db_wp.get_cursor()
 
         t = time.time()
         ts = int(round(t * 1000))
 
-        print title,date,city,sd,gc,url
         if len(url) > 0:
-            sql = "INSERT INTO schedule (status,`date`,title,`timestamp`,rackinger,url,area,leg)" \
-                    " VALUES (1,'%s','%s',%d,'%s','%s','%s','%s')"%(date,title,ts,gc,url,city,sd)
+            sql = "INSERT INTO schedule (status,`date`,title,`timestamp`,rackinger,url,area,leg,live_url)" \
+                  " VALUES (1,'%s','%s',%d,'%s','%s','%s','%s', '%s')" % (date, title, ts, gc, url, city, sd, live_url)
         else:
-            sql = "INSERT INTO schedule (status,`date`,title,`timestamp`,rackinger,area,leg)" \
-                  " VALUES (1,'%s','%s',%d,'%s','%s','%s')" % (date, title, ts, gc, city, sd)
+            sql = "INSERT INTO schedule (status,`date`,title,`timestamp`,rackinger,area,leg,live_url)" \
+                  " VALUES (1,'%s','%s',%d,'%s','%s','%s', '%s')" % (date, title, ts, gc, city, sd, live_url)
         print sql
         cursor_app.execute(sql)
 
         db_app.commit()
-        #db_wp.commit()
+        # db_wp.commit()
 
         return fmt_response('success')
     except Exception, e:
         db_app.rollback()
-        #db_wp.rollback()
+        # db_wp.rollback()
         print(e.message)
         print(traceback.format_exc())
         return fmt_response_error(0, '处理失败')
@@ -113,15 +132,16 @@ def list_match():
         et = request.values.get('et')
         cursor_app = db_app.get_cursor()
 
-        sql = "SELECT id,`date`,title,ifnull(rackinger,''),ifnull(url,''),ifnull(area,''),ifnull(leg,'') FROM schedule" \
-                           " WHERE `date` between '%s 00:00:00' and '%s 23:59:59'"%(st, et)
+        sql = "SELECT id,`date`,title,ifnull(rackinger,''),ifnull(url,''),ifnull(area,''),ifnull(leg,''), ifnull(live_url,'') FROM schedule" \
+              " WHERE `date` between '%s 00:00:00' and '%s 23:59:59'" % (st, et)
         print sql
         cursor_app.execute(sql)
         result = cursor_app.fetchall()
         list = []
         for row in result:
-            id,dt,title,rackinger,url,area,leg = row
-            tmp = {'id':id,'date':dt.split(' ')[0],'title':title,'rackinger':rackinger,'url':url,'area':area,'leg':leg}
+            id, dt, title, rackinger, url, area, leg, live_url = row
+            tmp = {'id': id, 'date': dt.split(' ')[0], 'title': title, 'rackinger': rackinger, 'url': url, 'area': area,
+                   'leg': leg, 'live_url': url}
             list.append(tmp)
 
         db_app.commit()
@@ -129,7 +149,7 @@ def list_match():
         return fmt_response(list)
     except Exception, e:
         db_app.rollback()
-        #db_wp.rollback()
+        # db_wp.rollback()
         print(e.message)
         print(traceback.format_exc())
         return fmt_response_error(0, '处理失败')
@@ -140,13 +160,13 @@ def del_match():
     try:
         id = int(request.values.get('id'))
         cursor_app = db_app.get_cursor()
-        cursor_app.execute("DELETE FROM schedule where id=%d"%id)
+        cursor_app.execute("DELETE FROM schedule where id=%d" % id)
 
         db_app.commit()
         return fmt_response("success")
     except Exception, e:
         db_app.rollback()
-        #db_wp.rollback()
+        # db_wp.rollback()
         print(e.message)
         print(traceback.format_exc())
         return fmt_response_error(0, '处理失败')
@@ -164,14 +184,14 @@ def sync_vip():
         cursor_wp = db_wp.get_cursor()
 
         # check if article_id is vip
-        sql = "SELECT * from wp_posts where `id`=%d and post_type='post' and post_status='private'"%article_id
+        sql = "SELECT * from wp_posts where `id`=%d and post_type='post' and post_status='private'" % article_id
         print sql
         cursor_wp.execute(sql)
         result = cursor_wp.fetchone()
         if result is None:
             return fmt_response_error(501, '不是VIP文章类型')
 
-        cmd = "/var/www/traveler/qyc/vip.sh %d"%article_id
+        cmd = "/var/www/traveler/qyc/vip.sh %d" % article_id
         os.system(cmd)
         db_app.commit()
         db_wp.commit()
@@ -183,18 +203,19 @@ def sync_vip():
         print(traceback.format_exc())
         return fmt_response_error(0, '处理失败')
 
+
 @shorty_api.route('/delete_article', methods=['POST'])
 def delete_article():
     try:
         article_id = int(request.values.get('article_id'))
         cursor_app = db_app.get_cursor()
         cursor_wp = db_wp.get_cursor()
-        cursor_app.execute("delete from resource_banner where resource_id =%d"%article_id)
-        cursor_app.execute("delete from resource_image where resource_id =%d"%article_id)
-        cursor_app.execute("delete from module_resource where resource_id =%d"%article_id)
-        cursor_app.execute("delete from resource_praise where resource_id =%d"%article_id)
-        cursor_app.execute("delete from resource_collection where resource_id =%d"%article_id)
-        cursor_app.execute("delete from resource where id =%d"%article_id)
+        cursor_app.execute("delete from resource_banner where resource_id =%d" % article_id)
+        cursor_app.execute("delete from resource_image where resource_id =%d" % article_id)
+        cursor_app.execute("delete from module_resource where resource_id =%d" % article_id)
+        cursor_app.execute("delete from resource_praise where resource_id =%d" % article_id)
+        cursor_app.execute("delete from resource_collection where resource_id =%d" % article_id)
+        cursor_app.execute("delete from resource where id =%d" % article_id)
         db_app.commit()
         db_wp.commit()
         return fmt_response("success")
@@ -207,4 +228,4 @@ def delete_article():
 
 
 if __name__ == '__main__':
-    shorty_api.run(host='0.0.0.0', port=8410 )
+    shorty_api.run(host='0.0.0.0', port=8410)

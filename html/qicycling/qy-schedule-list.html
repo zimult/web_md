@@ -65,7 +65,8 @@
                                 <th>rackinger</th>
                                 <th>area</th>
                                 <th>leg</th>
-                                <th>直播</th>
+                                <th>标题链接</th>
+                                <th>直播地址</th>
                                 <th>操作</th>
                             </tr>
                         </thead>
@@ -79,6 +80,7 @@
                               <td>{{src.area}}</td>
                               <td>{{src.leg}}</td>
                               <td>{{src.url}}</td>
+                              <td>{{src.live_url}}</td>
 
                               <td><a href="qy-schedule-update.html?id=">修改</a>
                                   <a href="javascript:;" @click="del_schedule(src.id)">删除</a></td>
