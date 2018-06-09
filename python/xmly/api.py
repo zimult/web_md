@@ -168,7 +168,32 @@ def all_paid_albums():
     return res.text
 
 
+@shorty_api.route('/xmly', methods=['GET','POST'])
+def xmly():
+    dt = dict(request.args)
+    #print dt
+    params = {}
+    for k,v in dt.items():
+        params[k] = v[0]
+    #print params
+    req_api = params['req_api']
+    params.pop('req_api')
+    params.pop('sig')
+    params['timestamp'] = int(round(time.time()*1000))
 
+    print params
+    print request.method
+    sig = get_sign(params)
+    params['sig'] = sig
+
+    url = "https://api.ximalaya.com" + req_api
+
+    if request.method == 'GET':
+        res = requests.get(url, params)
+    else:
+        res = requests.post(url, params)
+    print res.status_code, res.text
+    return res.text
 
 
 if __name__ == '__main__':
