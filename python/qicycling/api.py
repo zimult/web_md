@@ -71,48 +71,44 @@ def sync_article():
 def add_match():
     try:
         #
-        print request.values
         title = request.values.get('title')
         date = request.values.get('date') + " 00:00:00"
         city = request.values.get('city')
-        print title, date, city
 
         sd = ''
         if request.values.has_key('sd'):
             sd = request.values.get('sd')
-        print("sd:" + sd)
         gc = ''
         if request.values.has_key('gc'):
             gc = request.values.get('gc')
-        print("gc:" + gc)
         url = ''
         if request.values.has_key('url'):
             url = request.values.get('url')
-        print("url:" + url)
         live_url = ''
         if request.values.has_key('live_url'):
             live_url = request.values.get('live_url')
-        print("live_url:" + live_url)
 
-        print title, date, city, sd, gc, url
-        # 增加数据
-        print "------1"
+        id = None
         cursor_app = db_app.get_cursor()
-        print "------2"
-        # cursor_wp = db_wp.get_cursor()
 
-        t = time.time()
-        ts = int(round(t * 1000))
-
-        if len(url) > 0:
-            sql = "INSERT INTO schedule (status,`date`,title,`timestamp`,rackinger,url,area,leg,live_url)" \
-                  " VALUES (1,'%s','%s',%d,'%s','%s','%s','%s', '%s')" % (date, title, ts, gc, url, city, sd, live_url)
+        if request.values.has_key('id'):
+            id = int(request.values.get('id'))
+            sql = "UPDATE schedule set `date`='{}',title='{}',rackinger='{}'," \
+                  "url='{}',area='{}',leg='{}',live_url='{}' WHERE id={}".format(date, title, gc, url, city, sd,
+                                                                                 live_url, id)
         else:
-            sql = "INSERT INTO schedule (status,`date`,title,`timestamp`,rackinger,area,leg,live_url)" \
-                  " VALUES (1,'%s','%s',%d,'%s','%s','%s', '%s')" % (date, title, ts, gc, city, sd, live_url)
+            # 增加数据
+            t = time.time()
+            ts = int(round(t * 1000))
+            if len(url) > 0:
+                sql = "INSERT INTO schedule (status,`date`,title,`timestamp`,rackinger,url,area,leg,live_url)" \
+                      " VALUES (1,'%s','%s',%d,'%s','%s','%s','%s', '%s')" % (
+                          date, title, ts, gc, url, city, sd, live_url)
+            else:
+                sql = "INSERT INTO schedule (status,`date`,title,`timestamp`,rackinger,area,leg,live_url)" \
+                      " VALUES (1,'%s','%s',%d,'%s','%s','%s', '%s')" % (date, title, ts, gc, city, sd, live_url)
         print sql
         cursor_app.execute(sql)
-
         db_app.commit()
         # db_wp.commit()
 
@@ -139,14 +135,40 @@ def list_match():
         result = cursor_app.fetchall()
         list = []
         for row in result:
+            print row
             id, dt, title, rackinger, url, area, leg, live_url = row
             tmp = {'id': id, 'date': dt.split(' ')[0], 'title': title, 'rackinger': rackinger, 'url': url, 'area': area,
-                   'leg': leg, 'live_url': url}
+                   'leg': leg, 'live_url': live_url}
             list.append(tmp)
 
         db_app.commit()
         print list
         return fmt_response(list)
+    except Exception, e:
+        db_app.rollback()
+        # db_wp.rollback()
+        print(e.message)
+        print(traceback.format_exc())
+        return fmt_response_error(0, '处理失败')
+
+
+@shorty_api.route('/get_match', methods=['GET', 'POST', 'OPTIONS'])
+def get_match():
+    try:
+        id = int(request.values.get('id'))
+        cursor_app = db_app.get_cursor()
+
+        sql = "SELECT id,`date`,title,ifnull(rackinger,''),ifnull(url,''),ifnull(area,''),ifnull(leg,''), ifnull(live_url,'') FROM schedule" \
+              " WHERE id={}".format(id)
+        print sql
+        cursor_app.execute(sql)
+        result = cursor_app.fetchone()
+
+        id, dt, title, rackinger, url, area, leg, live_url = result
+        tmp = {'id': id, 'date': dt.split(' ')[0], 'title': title, 'rackinger': rackinger, 'url': url, 'area': area,
+               'leg': leg, 'live_url': url}
+        db_app.commit()
+        return fmt_response(tmp)
     except Exception, e:
         db_app.rollback()
         # db_wp.rollback()
@@ -218,6 +240,49 @@ def delete_article():
         cursor_app.execute("delete from resource where id =%d" % article_id)
         db_app.commit()
         db_wp.commit()
+        return fmt_response("success")
+    except Exception, e:
+        db_app.rollback()
+        # db_wp.rollback()
+        print(e.message)
+        print(traceback.format_exc())
+        return fmt_response_error(0, '处理失败')
+
+
+@shorty_api.route('/list_module', methods=['GET', 'POST'])
+def list_module():
+    try:
+        cursor_app = db_app.get_cursor()
+        cursor_app.execute("select id, status, `name` from `module` where parent_id = 1")
+        result = cursor_app.fetchall()
+        list = []
+        for row in result:
+            id, status, name = row
+            tmp = {'id': id, 'status': status, 'name': name}
+            list.append(tmp)
+        db_app.commit()
+        return fmt_response(list)
+    except Exception, e:
+        db_app.rollback()
+        # db_wp.rollback()
+        print(e.message)
+        print(traceback.format_exc())
+        return fmt_response_error(0, '处理失败')
+
+
+@shorty_api.route('/update_module_main', methods=['GET', 'POST'])
+def update_module_main():
+    try:
+        cursor_app = db_app.get_cursor()
+        lst = request.values.get('list')
+        # print lst
+        # print type(lst)
+        arr = json.loads(lst)
+        str = ','.join(arr)
+        print str
+        cursor_app.execute("UPDATE `module` set status=0 where parent_id=1")
+        cursor_app.execute("UPDATE `module` set status=1 where parent_id=1 and id in ({})".format(str))
+        db_app.commit()
         return fmt_response("success")
     except Exception, e:
         db_app.rollback()

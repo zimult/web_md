@@ -37,7 +37,32 @@
                  var r = window.location.search.substr(1).match(reg);
                  if(r!=null)return  unescape(r[2]); return null;
             }
-            alert(GetQueryString("id"));
+            //alert(GetQueryString("id"));
+            var id = GetQueryString("id")
+            var url = "http://47.97.124.47:8410"+"/get_match";
+            var params = {"id":id};
+            $.post(url,params,function(data){
+                //alert(typeof(data))
+                var rt = eval('(' + data + ')');
+                //alert(rt);
+                // alert(rt)
+                if(rt.code == 1) {
+                    var match_info = rt.result;
+                    //alert(match_info.title);
+                    $("#id_input_id").val(id);
+                    $("#id_input_title").val(match_info.title);
+                    $("#id_input_city").val(match_info.area);
+                    $("#id_input_date").val(match_info.date);
+                    $("#id_input_sd").val(match_info.sd);
+                    $("#id_input_gc").val(match_info.gc);
+                    $("#id_input_url").val(match_info.url);
+                    $("#id_input_liveurl").val(match_info.live_url);
+
+                } else {
+                    alert("没找到对应赛事信息")
+                }
+            });
+
         </script>
         <div class="container" id="task_page">
             <div class="text-center" style="margin-top: 10px;">
@@ -46,6 +71,9 @@
 
             <div class="row">
                     <div class="form-inline">
+                        <div class="form-group" style="margin-right:10px;">
+                            <input type="hidden" class="form-control" id="id_input_id"/>
+                        </div>
                         <div class="form-group" style="margin-right:10px;">
                             <input type="text" class="form-control" id="id_input_title" placeholder="标题" maxlength="128" searchKey=''/>    
                         </div>
@@ -63,11 +91,13 @@
                         <div class="form-group" style="margin-right:10px;">
                             <input type="text" class="form-control" id="id_input_url" placeholder="url" maxlength="128" searchKey=''/>
                         </div>
-                        <input id="id-btn-update" type="button" class="btn btn-default" value="更新" style="margin-right:20px;">
+                         <div class="form-group" style="margin-right:10px;">
+                            <input type="text" class="form-control" id="id_input_liveurl" placeholder="live_url" maxlength="128" searchKey=''/>
+                        </div>
+                        <input id="id-btn-update" type="button" class="btn btn-default" value="更新">
                     </div>
             </div>
-
+            <script type="text/javascript" src="js/qy/schedule_update.js"></script>
         </div>
-        <script type="text/javascript" src="js/qy/schedule_add.js"></script>
     </body>
 </html>
