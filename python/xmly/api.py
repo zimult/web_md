@@ -14,7 +14,7 @@ import json
 import sys
 from ali.alipay import *
 from util.tools import *
-from xmly_sign import get_sign
+from xmly_sign import * #get_sign, get_public_param
 
 requests.packages.urllib3.disable_warnings()
 reload(sys)
@@ -92,17 +92,18 @@ def redirect_uri():
 
     if rt_j.has_key('refresh_token'):
         rf_token = rt_j['refresh_token']
-        print(rf_token)
+        print("to refresh_token:{}".format(rf_token))
         rt2 = refresh_token(device_id, rf_token)
+        print("refresh_token return:{}".format(rt2))
         js2 = json.loads(rt2)
         if js2.has_key('error_no'):
-            print("refresh_token return [%s]" % rt2)
+            print("error: refresh_token return [%s]" % rt2)
             return rt2
         else:
             #if js2['expires_in'] > js['expires_in']:
             js['expires_in'] = js2['expires_in']
 
-    print js
+    print("redirect_url return:{}"%js)
     return json.dumps(js)
 
 
@@ -184,8 +185,8 @@ def xmly():
     # print params
     req_api = params['req_api']
     params.pop('req_api')
-    params.pop('sig')
-    params['timestamp'] = int(round(time.time() * 1000))
+    public_param = get_public_param()
+    params.extend(public_param)
 
     print params
     print request.method
@@ -201,6 +202,85 @@ def xmly():
     print res.status_code, res.text
     return res.text
 
+# 下单
+@shorty_api.route('/open_pay/place_order', methods=['GET', 'POST'])
+def place_order():
+    dt = dict(request.args)
+    params = {}
+    for k, v in dt.items():
+        params[k] = v[0]
+    req_api = request.path
+
+    # 记录本方数据库 订单表
+
+    device_id = request.values.get('device_id')
+    params.pop('device_id')
+    public_param = get_public_param()
+    params.extend(public_param)
+
+    print params
+    print request.method
+    sig = get_sign(params)
+    params['sig'] = sig
+    url = "https://api.ximalaya.com" + req_api
+
+    if request.method == 'GET':
+        res = requests.get(url, params)
+    else:
+        res = requests.post(url, params)
+    print res.status_code, res.text
+    res = json.loads(res.text)
+    if res.has_key('error_no'):
+        # 有错误
+        error_no = res['error_no']
+    else:
+        xima_order_no = res['xima_order_no']
+        xima_order_status = res['xima_order_status']
+        xima_order_created_at = res['xima_order_created_at']
+        xima_order_updated_at = res['xima_order_updated_at']
+        # 更新数据库
+    return res.text
+
+
+# 确认订单
+@shorty_api.route('/open_pay/confirm_order', methods=['POST'])
+def confirm_order():
+    dt = dict(request.args)
+    params = {}
+    for k, v in dt.items():
+        params[k] = v[0]
+    req_api = request.path
+
+    device_id = request.values.get('device_id')
+    params.pop('device_id')
+    public_param = get_public_param()
+    params.extend(public_param)
+
+    print params
+    print request.method
+    sig = get_sign(params)
+    params['sig'] = sig
+    url = "https://api.ximalaya.com" + req_api
+
+    if request.method == 'GET':
+        res = requests.get(url, params)
+    else:
+        res = requests.post(url, params)
+    print res.status_code, res.text
+    res = json.loads(res.text)
+    if res.has_key('error_no'):
+        # 有错误
+        error_no = res['error_no']
+    else:
+        xima_order_no = res['xima_order_no']
+        xima_order_status = res['xima_order_status']
+        xima_order_created_at = res['xima_order_created_at']
+        xima_order_updated_at = res['xima_order_updated_at']
+        # 更新数据库
+    return res.text
+
+
+#
 
 if __name__ == '__main__':
     shorty_api.run(host='0.0.0.0', port=8000)
