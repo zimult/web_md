@@ -64,7 +64,7 @@ def access_token(code, device_id):
 
 def refresh_token(device_id, refresh_token):
     url = "https://api.ximalaya.com/oauth2/refresh_token"
-    body = {'grant_type': 'authorization_code',
+    body = {'grant_type': 'refresh_token',
             # 'redirect_uri': 'http://api.test.ximalaya.com:8137/openapi-collector-app/get_access_token',
             'redirect_uri': 'https://app.yuan7dan.com/redirect_uri',
             'client_secret': appSecret,
@@ -88,18 +88,22 @@ def redirect_uri():
     rt_j = json.loads(rt)
     if rt_j.has_key('error_no'):
         return rt
+    js = json.loads(rt)
 
     if rt_j.has_key('refresh_token'):
         rf_token = rt_j['refresh_token']
         print(rf_token)
         rt2 = refresh_token(device_id, rf_token)
-        js = json.loads(rt2)
-        if js.has_key('error_no'):
+        js2 = json.loads(rt2)
+        if js2.has_key('error_no'):
             print("refresh_token return [%s]" % rt2)
             return rt2
+        else:
+            #if js2['expires_in'] > js['expires_in']:
+            js['expires_in'] = js2['expires_in']
 
-    print rt
-    return rt
+    print js
+    return json.dumps(js)
 
 
 def get_trade_no():

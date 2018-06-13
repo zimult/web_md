@@ -1,2 +1,4 @@
 rsync -avz *.py root@115.29.103.150:/root/xmly/
 rsync -avz *.sh root@115.29.103.150:/root/xmly/
+rsync -avz ali/*.py root@115.29.103.150:/root/xmly/ali
+rsync -avz util/*.py root@115.29.103.150:/root/xmly/util

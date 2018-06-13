@@ -7,7 +7,7 @@ import time
 import config
 import db
 import os
-import time
+import datetime
 import sys
 
 import traceback
@@ -117,7 +117,7 @@ def import_brand(cursor):
 
         print brand_name, brand_name_cn
         cursor.execute("INSERT INTO brand (status,`name`,name_cn,`TIMESTAMP`) values (1,'%s','%s',%d)"
-                           % (brand_name, brand_name_cn, ts))
+                       % (brand_name, brand_name_cn, ts))
 
 
 def get_brand_list(cursor):
@@ -136,59 +136,61 @@ def get_google_trend(cursor, list):
 
         get_google_trend_brand(cursor, check_name, brand_id)
 
+
 def get_google_trend_brand(cursor, check_name, brand_id):
-        #print brand_id, brand_name, brand_name_cn
+    # print brand_id, brand_name, brand_name_cn
 
-        if check_name == '飞鸽':
-            check_name = 'feige'
-        elif check_name == '凤凰':
-            check_name = 'phoenix'
-        elif check_name == '永久':
-            check_name = 'forever'
+    if check_name == '飞鸽':
+        check_name = 'feige'
+    elif check_name == '凤凰':
+        check_name = 'phoenix'
+    elif check_name == '永久':
+        check_name = 'forever'
 
-        #url = "https://bikeridejoy.herokuapp.com/api/trend/index/"+check_name+"/3"
-        url = "https://bikeridejoy.herokuapp.com/api/trend/index/" + check_name
-        print url
-        try:
-            res = requests.get(url)
-            print res.text
-            js = json.loads(res.text)
-        except Exception, e:
-            print(e.message)
-            print(traceback.format_exc())
-            return
+    # url = "https://bikeridejoy.herokuapp.com/api/trend/index/"+check_name+"/3"
+    url = "https://bikeridejoy.herokuapp.com/api/trend/index/" + check_name
+    print url
+    try:
+        res = requests.get(url)
+        print res.text
+        js = json.loads(res.text)
+    except Exception, e:
+        print(e.message)
+        print(traceback.format_exc())
+        return
 
-        t = time.time()
+    t = time.time()
+    ts = int(round(t * 1000))
+
+    # print js
+    # for key in js:
+    #     rt = js[key]
+    #     for tk in rt:
+    #         tm = int(tk)/1000
+    #         num = int(rt[tk])
+    #         time_l = time.localtime(tm)
+    #         insert_brand_opinion(cursor, brand_id, time_l, num, ts)
+    item = js[0]
+    for k, v in item.items():
+        print k, v
         ts = int(round(t * 1000))
-
-        #print js
-        # for key in js:
-        #     rt = js[key]
-        #     for tk in rt:
-        #         tm = int(tk)/1000
-        #         num = int(rt[tk])
-        #         time_l = time.localtime(tm)
-        #         insert_brand_opinion(cursor, brand_id, time_l, num, ts)
-        item = js[0]
-        for k,v in item.items():
-            print k,v
-            ts = int(round(t * 1000))
-            insert_brand_opinion(cursor, brand_id, v, 1, ts)
+        insert_brand_opinion(cursor, brand_id, v, 1, ts)
 
 
-def insert_brand_opinion(cursor, brand_id, time_l, num, ts):
-    str_time = time.strftime("%Y-%m-%d %H:%M:%S",time_l)
-    cursor.execute("SELECT id FROM brand_opinion where `day`='%s' and brand_id=%d"%(str_time,brand_id))
+def insert_brand_opinion(cursor, brand_id, value, num, ts):
+    #str_time = datetime.now().strftime("%Y-%m-%d") + "08:00:00"
+    str_time = time.strftime("%Y-%m-%d", time.localtime()) + " 08:00:00"
+    cursor.execute("SELECT id FROM brand_opinion where `day`='%s' and brand_id=%d" % (str_time, brand_id))
     result = cursor.fetchone()
     if result is None:
         sql = "INSERT INTO brand_opinion (`day`,full_num,num,brand_id,`timestamp`)" \
-                       " VALUES ('%s',%d,1,%d,%d)"%(str_time,num,brand_id,ts)
-        #print sql
+              " VALUES ('%s',%d,1,%d,%d)" % (str_time, value, brand_id, ts)
+        # print sql
         cursor.execute(sql)
     else:
         id = result[0]
-        #print id
-        cursor.execute("UPDATE brand_opinion set full_num=%d, `timestamp`=%d where id=%d"%(num,ts,id))
+        # print id
+        cursor.execute("UPDATE brand_opinion set full_num=%d, `timestamp`=%d where id=%d" % (value, ts, id))
 
 
 if __name__ == '__main__':
@@ -196,8 +198,8 @@ if __name__ == '__main__':
     # html, img_list, author, video_list = sync.get_href('http://www.qicycling.cn/2927.html')
     # print html
 
-    #print time.time()
-    #cursor_wp = db_wp.get_cursor()
+    # print time.time()
+    # cursor_wp = db_wp.get_cursor()
     cursor_app = db_app.get_cursor()
 
     # import_brand(cursor_app)
@@ -207,5 +209,5 @@ if __name__ == '__main__':
 
     get_google_trend(cursor_app, b_l)
     #
-    #get_google_trend_brand(cursor_app, '3T')
+    # get_google_trend_brand(cursor_app, '3T')
     db_app.commit()
