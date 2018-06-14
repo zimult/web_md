@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 
-# import logging
-# from logging.handlers import TimedRotatingFileHandler
+import logging
+from logging.handlers import TimedRotatingFileHandler
 
 from flask import Flask
 import config
@@ -14,18 +14,31 @@ import json
 import sys
 from ali.alipay import *
 from util.tools import *
-from xmly_sign import * #get_sign, get_public_param
+from xmly_sign import *  # get_sign, get_public_param
 
 requests.packages.urllib3.disable_warnings()
 reload(sys)
 sys.setdefaultencoding('utf8')
 
+appKey = 'f9aee5687ff7d8e66cdeff6a3c63c81a'
+appSecret = '4fd4c41d4fe59a183ffd106a61d895bc'
+
+formatter = logging.Formatter('%(asctime)s %(levelname)s [%(thread)d] %(message)s')  # 每行日志的前缀设置
+log = logging.getLogger('werkzeug')
+fileTimeHandler = TimedRotatingFileHandler('./log/' + 'xmly.log', "d", 1, 30)
+# 设置 切分后日志文件名的时间格式 默认 filename+"." + suffix 如果需要更改需要改logging 源码
+fileTimeHandler.suffix = "%Y%m%d"
+logging.basicConfig(level=logging.INFO)
+fileTimeHandler.setFormatter(formatter)
+log.addHandler(fileTimeHandler)
+
 shorty_api = Flask(__name__)
+
+log.info("------ server start.")
+
 
 # db_wp = db.DB(config.host, config.user, config.password, config.database_wp)
 # db_app = db.DB(config.host, config.user, config.password, config.database_app)
-appKey = 'f9aee5687ff7d8e66cdeff6a3c63c81a'
-appSecret = '4fd4c41d4fe59a183ffd106a61d895bc'
 
 
 def access_token2(code, device_id):
@@ -62,7 +75,7 @@ def access_token(code, device_id):
     return r.text
 
 
-def refresh_token(device_id, refresh_token):
+def xmly_refresh_token(device_id, r_token):
     url = "https://api.ximalaya.com/oauth2/refresh_token"
     body = {'grant_type': 'refresh_token',
             # 'redirect_uri': 'http://api.test.ximalaya.com:8137/openapi-collector-app/get_access_token',
@@ -70,7 +83,7 @@ def refresh_token(device_id, refresh_token):
             'client_secret': appSecret,
             'client_id': appKey,
             'device_id': device_id,
-            'refresh_token': refresh_token,
+            'refresh_token': r_token,
             }
     r = requests.post(url, body)
     print r.text
@@ -83,28 +96,43 @@ def redirect_uri():
     state = request.values.get('state')
     device_id = request.values.get('device_id')
     # print id
-
+    log.info("redirect_uri device_id:{}".format(device_id))
     rt = access_token(code, device_id)
+    log.info("redirect_uri return:{}".format(rt))
     rt_j = json.loads(rt)
     if rt_j.has_key('error_no'):
         return rt
-    js = json.loads(rt)
 
-    if rt_j.has_key('refresh_token'):
-        rf_token = rt_j['refresh_token']
-        print("to refresh_token:{}".format(rf_token))
-        rt2 = refresh_token(device_id, rf_token)
-        print("refresh_token return:{}".format(rt2))
-        js2 = json.loads(rt2)
-        if js2.has_key('error_no'):
-            print("error: refresh_token return [%s]" % rt2)
-            return rt2
-        else:
-            #if js2['expires_in'] > js['expires_in']:
-            js['expires_in'] = js2['expires_in']
+    # if rt_j.has_key('refresh_token'):
+    #     rf_token = rt_j['refresh_token']
+    #     print("to refresh_token:{}".format(rf_token))
+    #     rt2 = refresh_token(device_id, rf_token)
+    #     print("refresh_token return:{}".format(rt2))
+    #     js2 = json.loads(rt2)
+    #     if js2.has_key('error_no'):
+    #         print("error: refresh_token return [%s]" % rt2)
+    #         return rt2
+    #     else:
+    #         #if js2['expires_in'] > js['expires_in']:
+    #         js['expires_in'] = js2['expires_in']
+    #
+    # print("redirect_url return:{}"%js)
+    # return json.dumps(js)
 
-    print("redirect_url return:{}"%js)
-    return json.dumps(js)
+    return rt
+
+
+@shorty_api.route('/refresh_token', methods=['GET', 'POST'])
+def refresh_token():
+    device_id = request.values.get('device_id')
+    rf_token = request.values.get('refresh_token')
+    log.info("refresh_token device_id:{}".format(device_id))
+    rt = xmly_refresh_token(device_id, rf_token)
+    log.info("refresh_token return:{}".format(rt))
+    rt_j = json.loads(rt)
+    if rt_j.has_key('error_no'):
+        return rt
+    return rt
 
 
 def get_trade_no():
@@ -201,6 +229,7 @@ def xmly():
         res = requests.post(url, params)
     print res.status_code, res.text
     return res.text
+
 
 # 下单
 @shorty_api.route('/open_pay/place_order', methods=['GET', 'POST'])
