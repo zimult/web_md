@@ -534,7 +534,7 @@ def add_resource_module(cursor_wp, cursor_app, article_id):
             #
             cursor_app.execute(
                 "INSERT INTO `module` (status, description, display_order, name, resource_type, parent_id, timestamp)" \
-                " values (1, '%s', 20, '%s', 1, 1, %d)" % (name, name, ts))
+                " values (1, '%s', 20, '%s', 0, 1, %d)" % (name, name, ts))
             module_id = int(cursor_app.lastrowid)
         cursor_app.execute("INSERT INTO module_resource (status, module_id, resource_id, `timestamp`) " \
                            "VALUES (1, %d, %d, %d)" % (module_id, article_id, ts))
