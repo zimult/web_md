@@ -101,7 +101,7 @@ if __name__ == '__main__':
         if result is None:
             sql = "INSERT INTO resource (id, title, description, status, h5url, is_vip, publisher, type,TIMESTAMP)" \
                 " VALUES (%d, '%s', '%s', 1, '%s', 1, '%s', 0, %d)" % (
-                article_id, title, description, h5, author, ts * 1000)
+                article_id, title, description, h5, author, ts)
         else:
             sql = "UPDATE resource set title='%s', description='%s', is_vip=1 where id=%d" % (title, title, article_id)
 
