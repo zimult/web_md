@@ -170,16 +170,23 @@ def get_google_trend_brand(cursor, check_name, brand_id):
     #         num = int(rt[tk])
     #         time_l = time.localtime(tm)
     #         insert_brand_opinion(cursor, brand_id, time_l, num, ts)
-    item = js[0]
-    for k, v in item.items():
-        print k, v
-        ts = int(round(t * 1000))
-        insert_brand_opinion(cursor, brand_id, v, 1, ts)
+    # item = js[0]
+    sts = "2018-06-10 08:00:00"
+    date_s = datetime.datetime.strptime(sts, '%Y-%m-%d %H:%M:%S')
+    stk = 736856
+    for ror in js:
+        for k,v in ror.items():
+            print k, v
+            days = int(k) - stk
+            delta = datetime.timedelta(days)
+            n_days = date_s + delta
+            n_str = n_days.strftime('%Y-%m-%d %H:%M:%S')
+            insert_brand_opinion(cursor, brand_id, v, n_str, ts)
 
 
-def insert_brand_opinion(cursor, brand_id, value, num, ts):
-    #str_time = datetime.now().strftime("%Y-%m-%d") + "08:00:00"
-    str_time = time.strftime("%Y-%m-%d", time.localtime()) + " 08:00:00"
+def insert_brand_opinion(cursor, brand_id, value, str_time, ts):
+    # str_time = datetime.now().strftime("%Y-%m-%d") + "08:00:00"
+    # str_time = time.strftime("%Y-%m-%d", time.localtime()) + " 08:00:00"
     cursor.execute("SELECT id FROM brand_opinion where `day`='%s' and brand_id=%d" % (str_time, brand_id))
     result = cursor.fetchone()
     if result is None:
@@ -190,7 +197,8 @@ def insert_brand_opinion(cursor, brand_id, value, num, ts):
     else:
         id = result[0]
         # print id
-        cursor.execute("UPDATE brand_opinion set full_num=%d, `timestamp`=%d where id=%d" % (value, ts, id))
+        #cursor.execute("UPDATE brand_opinion set full_num=%d, `timestamp`=%d where id=%d and `day`='%s'" % (
+        #value, ts, id, str_time))
 
 
 if __name__ == '__main__':
