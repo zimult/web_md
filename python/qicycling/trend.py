@@ -133,7 +133,6 @@ def get_google_trend(cursor, list):
     for row in list:
         brand_id, brand_name, brand_name_cn = row
         check_name = brand_name.lower()
-
         get_google_trend_brand(cursor, check_name, brand_id)
 
 
@@ -148,57 +147,71 @@ def get_google_trend_brand(cursor, check_name, brand_id):
         check_name = 'forever'
 
     # url = "https://bikeridejoy.herokuapp.com/api/trend/index/"+check_name+"/3"
-    url = "https://bikeridejoy.herokuapp.com/api/trend/index/" + check_name
-    print url
+    url1 = "https://bikeridejoy.herokuapp.com/api/trend/index/" + check_name
+    url2 = "https://bikeridejoy.herokuapp.com/api/trend/qicycling/" + check_name
+    print url1
+    t = time.time()
+    ts = int(round(t * 1000))
     try:
-        res = requests.get(url)
-        print res.text
-        js = json.loads(res.text)
+        res1 = requests.get(url1)
+        res2 = requests.get(url2)
+        print res1.text
+
+        js1 = json.loads(res1.text)
+        js2 = json.loads(res2.text)
+
+        sts = "2018-06-10 08:00:00"
+        date_s = datetime.datetime.strptime(sts, '%Y-%m-%d %H:%M:%S')
+        stk = 736856
+        hs1 = {}
+        hs2 = {}
+        for ror in js1:
+            for k, v in ror.items():
+                # print k, v
+                days = int(k) - stk
+                delta = datetime.timedelta(days)
+                n_days = date_s + delta
+                n_str = n_days.strftime('%Y-%m-%d %H:%M:%S')
+                hs1[n_str] = v
+        for ror in js2:
+            for k, v in ror.items():
+                # print k, v
+                days = int(k) - stk
+                delta = datetime.timedelta(days)
+                n_days = date_s + delta
+                n_str = n_days.strftime('%Y-%m-%d %H:%M:%S')
+                hs2[n_str] = v
+        print hs1
+        print hs2
+
+        for k, v in hs1.items():
+            if hs2.has_key(k):
+                v2 = hs2[k]
+            else:
+                v2 = 1
+            insert_brand_opinion(cursor, brand_id, v, v2, k, ts)
+
     except Exception, e:
         print(e.message)
         print(traceback.format_exc())
+        # 写入当日数据
+        n_str = datetime.datetime.now().strftime('%Y-%m-%d') + ' 08:00:00'
+        insert_brand_opinion(cursor, brand_id, 1, 1, n_str, ts)
         return
 
-    t = time.time()
-    ts = int(round(t * 1000))
-
-    # print js
-    # for key in js:
-    #     rt = js[key]
-    #     for tk in rt:
-    #         tm = int(tk)/1000
-    #         num = int(rt[tk])
-    #         time_l = time.localtime(tm)
-    #         insert_brand_opinion(cursor, brand_id, time_l, num, ts)
-    # item = js[0]
-    sts = "2018-06-10 08:00:00"
-    date_s = datetime.datetime.strptime(sts, '%Y-%m-%d %H:%M:%S')
-    stk = 736856
-    for ror in js:
-        for k,v in ror.items():
-            print k, v
-            days = int(k) - stk
-            delta = datetime.timedelta(days)
-            n_days = date_s + delta
-            n_str = n_days.strftime('%Y-%m-%d %H:%M:%S')
-            insert_brand_opinion(cursor, brand_id, v, n_str, ts)
-
-
-def insert_brand_opinion(cursor, brand_id, value, str_time, ts):
-    # str_time = datetime.now().strftime("%Y-%m-%d") + "08:00:00"
-    # str_time = time.strftime("%Y-%m-%d", time.localtime()) + " 08:00:00"
+def insert_brand_opinion(cursor, brand_id, value1, value2, str_time, ts):
     cursor.execute("SELECT id FROM brand_opinion where `day`='%s' and brand_id=%d" % (str_time, brand_id))
     result = cursor.fetchone()
     if result is None:
         sql = "INSERT INTO brand_opinion (`day`,full_num,num,brand_id,`timestamp`)" \
-              " VALUES ('%s',%d,1,%d,%d)" % (str_time, value, brand_id, ts)
+              " VALUES ('%s',%d,%d,%d,%d)" % (str_time, value1, value2, brand_id, ts)
         # print sql
         cursor.execute(sql)
     else:
         id = result[0]
         # print id
-        #cursor.execute("UPDATE brand_opinion set full_num=%d, `timestamp`=%d where id=%d and `day`='%s'" % (
-        #value, ts, id, str_time))
+        #cursor.execute("UPDATE brand_opinion set full_num=%d, num=%d, `timestamp`=%d where id=%d and `day`='%s'" % (
+        #    value1, value2, ts, id, str_time))
 
 
 if __name__ == '__main__':
@@ -208,6 +221,7 @@ if __name__ == '__main__':
 
     # print time.time()
     # cursor_wp = db_wp.get_cursor()
+    #print datetime.datetime.now().strftime('%Y-%m-%d')
     cursor_app = db_app.get_cursor()
 
     # import_brand(cursor_app)

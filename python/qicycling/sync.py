@@ -424,12 +424,12 @@ def post_to_search(article_id, title, description, h5, author):
     return r
 
 
-def is_vip_category(cursor, article_id):
+def is_unsync_category(cursor, article_id):
     sql = "select ter.name, r.`object_id`, tax.taxonomy  from wp_term_taxonomy tax inner join wp_terms ter on ter.`term_id` = tax.term_id" \
           " inner join `wp_term_relationships` r on r.`term_taxonomy_id` = tax.`term_taxonomy_id`" \
           " where taxonomy = 'category' and r.`object_id` = %d" % article_id
     cursor.execute(sql)
-    result = cursor_wp.fetchall()
+    result = cursor.fetchall()
     list = []
     for row in result:
         list.append(row[0])
@@ -451,9 +451,9 @@ def recordArticle(db_app, articles):
             href = article['href']
             print("--------- todo article:%d" % article_id)
 
-            # check vip module
-            if is_vip_category(cursor_wp, article_id):
-                print("------- article:{} is vip module, continue".format(article_id))
+            # check unsync module
+            if is_unsync_category(cursor_wp, article_id):
+                print("------- article:{} is unsync module, continue".format(article_id))
                 continue
 
             cursor_app.execute("SELECT status FROM resource where id=%d" % article_id)
