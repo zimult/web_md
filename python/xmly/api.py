@@ -98,41 +98,48 @@ def redirect_uri():
     # print id
     log.info("redirect_uri device_id:{}".format(device_id))
     rt = access_token(code, device_id)
-    log.info("redirect_uri return:{}".format(rt))
+    log.info("redirect_uri access_token return:{}".format(rt))
     rt_j = json.loads(rt)
     if rt_j.has_key('error_no'):
         return rt
-
+    return rt
     # if rt_j.has_key('refresh_token'):
     #     rf_token = rt_j['refresh_token']
-    #     print("to refresh_token:{}".format(rf_token))
-    #     rt2 = refresh_token(device_id, rf_token)
-    #     print("refresh_token return:{}".format(rt2))
+    #     dv_id = rt_j['device_id']
+    #     log.info("redirect_uri - to refresh_token:{}, device_id:{}".format(rf_token, dv_id))
+    #     rt2 = xmly_refresh_token(dv_id, rf_token)
+    #     log.info("redirect_uri - refresh_token return:{}".format(rt2))
     #     js2 = json.loads(rt2)
     #     if js2.has_key('error_no'):
-    #         print("error: refresh_token return [%s]" % rt2)
-    #         return rt2
+    #         log.error("error: refresh_token return [%s]" % rt2)
     #     else:
-    #         #if js2['expires_in'] > js['expires_in']:
-    #         js['expires_in'] = js2['expires_in']
-    #
-    # print("redirect_url return:{}"%js)
-    # return json.dumps(js)
-
-    return rt
+    #         rt_j['access_token'] = js2['access_token']
+    #         rt_j['refresh_token'] = js2['refresh_token']
+    #         rt_j['expires_in'] = js2['expires_in']
+    # # print("redirect_url return:{}"%js)
+    # # return json.dumps(js)
+    # log.info("redirect_uri return:{}".format(rt_j))
+    # return json.dumps(rt_j)
 
 
 @shorty_api.route('/refresh_token', methods=['GET', 'POST'])
 def refresh_token():
-    device_id = request.values.get('device_id')
-    rf_token = request.values.get('refresh_token')
-    log.info("refresh_token device_id:{}".format(device_id))
-    rt = xmly_refresh_token(device_id, rf_token)
-    log.info("refresh_token return:{}".format(rt))
-    rt_j = json.loads(rt)
-    if rt_j.has_key('error_no'):
+    try:
+        log.info(request.headers)
+        device_id = request.values.get('device_id')
+        rf_token = request.values.get('refresh_token')
+        log.info(request.get_data())
+        log.info(request.get_json())
+        log.info("refresh_token request:{}".format(request.values))
+        log.info("refresh_token device_id:{}, refresh_token={}".format(device_id, rf_token))
+        rt = xmly_refresh_token(device_id, rf_token)
+        log.info("refresh_token return:{}".format(rt))
+        rt_j = json.loads(rt)
+        if rt_j.has_key('error_no'):
+            return rt
         return rt
-    return rt
+    except:
+        return "参数格式错误"
 
 
 def get_trade_no():
