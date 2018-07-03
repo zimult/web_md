@@ -212,23 +212,23 @@ def all_paid_albums():
 
 @shorty_api.route('/xmly', methods=['GET', 'POST'])
 def xmly():
-    dt = dict(request.args)
-    # print dt
     params = {}
-    for k, v in dt.items():
-        params[k] = v[0]
-    # print params
+    for k, v in request.values.items():
+        params[k] = v
+    log.info(params)
     req_api = params['req_api']
     params.pop('req_api')
     public_param = get_public_param()
-    params.extend(public_param)
 
-    print params
+    params.update(public_param)
+
     print request.method
     sig = get_sign(params)
     params['sig'] = sig
+    log.info(params)
 
-    url = "https://api.ximalaya.com" + req_api
+    #url = "https://api.ximalaya.com" + req_api
+    url = "https://mpay.ximalaya.com" + req_api
 
     if request.method == 'GET':
         res = requests.get(url, params)
@@ -241,45 +241,44 @@ def xmly():
 # 下单
 @shorty_api.route('/open_pay/place_order', methods=['GET', 'POST'])
 def place_order():
-    dt = dict(request.args)
     params = {}
-    for k, v in dt.items():
-        params[k] = v[0]
-    req_api = request.path
-
+    log.info("/open_pay/place_order params recv:{}".format(request.values))
+    for k, v in request.values.items():
+        log.info("k:{}, v:{}".format(k,v))
+        params[k] = v
+    log.info("/open_pay/place_order params recv:{}".format(params))
     # 记录本方数据库 订单表
 
     device_id = request.values.get('device_id')
-    params.pop('device_id')
+    #params.pop('device_id')
     public_param = get_public_param()
-    params.extend(public_param)
+    params.update(public_param)
 
-    print params
-    print request.method
     sig = get_sign(params)
     params['sig'] = sig
-    url = "https://api.ximalaya.com" + req_api
+    log.info("/open_pay/place_order params send:{}".format(params))
+    url = "https://api.ximalaya.com" + '/open_pay/place_order'
 
-    if request.method == 'GET':
-        res = requests.get(url, params)
-    else:
-        res = requests.post(url, params)
-    print res.status_code, res.text
-    res = json.loads(res.text)
-    if res.has_key('error_no'):
+    # if request.method == 'GET':
+    #     res = requests.get(url, params)
+    # else:
+    res = requests.post(url, params)
+    log.info("xmly return code:{}, info:{}".format(res.status_code, res.text))
+    rsp = json.loads(res.text)
+    if rsp.has_key('error_no'):
         # 有错误
-        error_no = res['error_no']
+        error_no = rsp['error_no']
     else:
-        xima_order_no = res['xima_order_no']
-        xima_order_status = res['xima_order_status']
-        xima_order_created_at = res['xima_order_created_at']
-        xima_order_updated_at = res['xima_order_updated_at']
+        xima_order_no = rsp['xima_order_no']
+        xima_order_status = rsp['xima_order_status']
+        xima_order_created_at = rsp['xima_order_created_at']
+        xima_order_updated_at = rsp['xima_order_updated_at']
         # 更新数据库
     return res.text
 
 
 # 确认订单
-@shorty_api.route('/open_pay/confirm_order', methods=['POST'])
+@shorty_api.route('/open_pay/confirm_order', methods=['POST', 'GET'])
 def confirm_order():
     dt = dict(request.args)
     params = {}
@@ -315,7 +314,9 @@ def confirm_order():
         # 更新数据库
     return res.text
 
-
+@shorty_api.route('/open_pay/get_price_info', methods=['POST', 'GET'])
+def get_price_info():
+    sq = ""
 #
 
 if __name__ == '__main__':

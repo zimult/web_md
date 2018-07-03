@@ -23,6 +23,10 @@ sys.setdefaultencoding('utf-8')
 
 A_key = 'b617866c20482d133d5de66fceb37da3'
 A_secret = '4d8e605fa7ed546c4bcb33dee1381179'
+
+# A_key = 'f9aee5687ff7d8e66cdeff6a3c63c81a'
+# A_secret = '4fd4c41d4fe59a183ffd106a61d895bc'
+
 serverAuthenticateStaticKey = 'z0hh5l9A'
 
 
@@ -37,12 +41,12 @@ class OrderStatus(Enum):
 
 
 def get_public_param():
-    param = []
+    param = {}
     param['app_key'] = A_key
-    param['client_os_type'] = 4
     param['nonce'] = rand_string(8)
     param['timestamp'] = int(round(time.time() * 1000))
-    param['sig'] = ''
+    #param['sig'] = ''
+    return param
 
 
 def ordered_data(data):
