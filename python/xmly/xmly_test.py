@@ -16,11 +16,25 @@ def get_price_info():
     #  'timestamp': int(round(time.time() * 1000)), 'device_id': '123456789'}
 
     sig = get_sign(params)
-    params['sig'] = sig
+    params['sig'] = 'a' + sig
     print params
     res = requests.get(url, params)
     print res.status_code, res.text
 
+
+def place_order():
+    url = "https://mpay.ximalaya.com" + "/open_pay/place_order"
+    params = {'access_token': 'cbba01a439b817946c1a7d1686de8a12',
+              'price_type': 2,
+              'pay_content': '6922889',
+              'price': '0.21'}
+    public_param = get_public_param()
+    params.update(public_param)
+    sig = get_sign(params)
+    params['sig'] = sig
+    print params
+    res = requests.get(url, params)
+    print res.status_code, res.text
 
 def test_sing():
     url = "https://mpay.ximalaya.com/openapi-payfacade-app/open_pay/get_price_info?" \
@@ -48,6 +62,7 @@ def test_sing():
     print res.text
 
 if __name__ == '__main__':
-    get_price_info()
+    #get_price_info()
 
+    place_order()
     #test_sing()

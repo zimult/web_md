@@ -44,6 +44,7 @@ def get_public_param():
     param = {}
     param['app_key'] = A_key
     param['nonce'] = rand_string(8)
+    param['client_os_type'] = 4
     param['timestamp'] = int(round(time.time() * 1000))
     #param['sig'] = ''
     return param

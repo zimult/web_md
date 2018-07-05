@@ -243,13 +243,35 @@ def xmly():
 def place_order():
     params = {}
     log.info("/open_pay/place_order params recv:{}".format(request.values))
-    for k, v in request.values.items():
-        log.info("k:{}, v:{}".format(k,v))
-        params[k] = v
+    # for k, v in request.values.items():
+    #     log.info("k:{}, v:{}".format(k,v))
+    #     params[k] = v
+    pa = {"price_type": 2, "uid": 108425629, "device_id": "C0695EA0-310A-44B9-855D-832B52DB263E", "price": 0.2,
+     "pack_id": "com.Freebox.xiaoyaRok", "pay_content": "6922889", "client_os_type": 1,
+     "sig": "738db9fe07b35fc0f4b3094dac543d55", "req_api": "\\/open_pay\\/place_order",
+     "access_token": "a8c3b5fe33121e23d21bee18f54ff9ea", "nonce": "7oKdQcvG2BwROJib"}
+
+    device_id = request.values.get('device_id')
+    price_type = request.values.get('price_type')
+    price = request.values.get('price')
+    uid = request.values.get('uid')
+    pack_id = request.values.get('pack_id')
+    pay_content = request.values.get('pay_content')
+    client_os_type = request.values.get('client_os_type')
+    access_token = request.values.get('access_token')
+
+    #params['device_id'] = device_id
+    params['price_type'] = price_type
+    params['price'] = price
+    #params['uid'] = uid
+    #params['pack_id'] = pack_id
+    params['pay_content'] = pay_content
+   # params['client_os_type'] = client_os_type
+    params['access_token'] = access_token
+
     log.info("/open_pay/place_order params recv:{}".format(params))
     # 记录本方数据库 订单表
 
-    device_id = request.values.get('device_id')
     #params.pop('device_id')
     public_param = get_public_param()
     params.update(public_param)
