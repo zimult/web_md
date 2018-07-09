@@ -30,23 +30,27 @@ A_secret = '4d8e605fa7ed546c4bcb33dee1381179'
 serverAuthenticateStaticKey = 'z0hh5l9A'
 
 
+# serverAuthenticateStaticKey = 'de5kio2f'
+
+
 class ConfirmType(Enum):
     pay = 1  # 支付
     cancle = 2  # 取消或失败
 
+
 class OrderStatus(Enum):
-    pay = 1         # 等待支付
-    success = 2     # 支付成功
-    cancle = 3      # 支付失败
+    pay = 1  # 等待支付
+    success = 2  # 支付成功
+    cancle = 3  # 支付失败
 
 
 def get_public_param():
     param = {}
     param['app_key'] = A_key
     param['nonce'] = rand_string(8)
-    param['client_os_type'] = 4
+    param['client_os_type'] = 1
     param['timestamp'] = int(round(time.time() * 1000))
-    #param['sig'] = ''
+    # param['sig'] = ''
     return param
 
 
@@ -109,18 +113,46 @@ def get_sign(data):
     print unsigned_string
     b64_str = base64.b64encode(unsigned_string.encode('utf-8'))
     print b64_str
+    # sha1Key = A_secret
     sha1Key = A_secret + serverAuthenticateStaticKey
-    # sha1Key = '4d8e605fa7ed546c4bcb33dee1381179de5kio2f'
+    #sha1Key = serverAuthenticateStaticKey + A_secret
+    # sha1Key = A_secret + 'de5kio2f'
+    #sha1Key = 'de5kio2f'
 
     # hmac.new(Token, data, hashlib.sha1).digest().encode('base64').rstrip()
     # h = hmac.new(bytearray(sha1Key), bytearray(unsigned_string), SHA)
     h = hmac.new(sha1Key, b64_str, hashlib.sha1)
     r = h.digest()
-    print r, len(r)
+    # print r, len(r)
     sign = str_md5(r)
-    print sign
+    # print sign.rstrip()
     # print str_md5(bytearray(r))
-    return sign
+    return sign.rstrip()
+
+def get_sign_log(log, data):
+    unsigned_items = ordered_data(data)
+    # for k, v in unsigned_items:
+    #     print k,v
+    # unsigned_string = "&".join("{0}={1}".format(k, lib.unicode_2_str(v)) for k, v in unsigned_items)
+    unsigned_string = "&".join("{0}={1}".format(k, v) for k, v in unsigned_items)
+    log.info("unsigned_string:{}".format(unsigned_string))
+    b64_str = base64.b64encode(unsigned_string.encode('utf-8'))
+    log.info("b64_str:{}".format(b64_str))
+    # sha1Key = A_secret
+    sha1Key = A_secret + serverAuthenticateStaticKey
+    #sha1Key = serverAuthenticateStaticKey + A_secret
+    # sha1Key = A_secret + 'de5kio2f'
+    #sha1Key = 'de5kio2f'
+    log.info("sha1Key:{}".format(sha1Key))
+    # hmac.new(Token, data, hashlib.sha1).digest().encode('base64').rstrip()
+    # h = hmac.new(bytearray(sha1Key), bytearray(unsigned_string), SHA)
+    h = hmac.new(sha1Key, b64_str, hashlib.sha1)
+    r = h.digest()
+    # print r, len(r)
+    sign = str_md5(r)
+    # print sign.rstrip()
+    # print str_md5(bytearray(r))
+    return sign.rstrip()
 
 
 def test():
@@ -163,24 +195,40 @@ def test():
 
 def test2():
     # url = "https://api.ximalaya.com/categories/list?access_token=77eca96155c50179141549792edb7570&app_key=b617866c20482d133d5de66fceb37da3&client_os_type=2&device_id=df529d6e9b56c15b&pack_id=com.ushaqi.zhuishushenqi&sig=332853e55f696a7e8926bc5235ee31ff"
-    url = "https://api.ximalaya.com/categories/list?" \
-          "app_key=b617866c20482d133d5de66fceb37da3&device_id=08d833f5826e8wk&client_os_type=2&pack_id=com.app.test.android&access_token=75dbec7f1fc289145a88690307757f9d&q=聪明与智慧"
+    url = "https://mpay.ximalaya.com/openapi-payfacade-app/open_pay/place_order?" \
+          "app_key=b617866c20482d133d5de66fceb37da3&device_id=123456789&client_os_type=1&nonce=6509976" \
+          "d0894817e2ad4452b69ee74fa&timestamp=1498716218179&third_uid=20170324&price_type=" \
+          "1&pay_content=19586586&price=9.90"
+
+    # url = "https://mpay.ximalaya.com/openapi-payfacade-app/open_pay/confirm_order?app_key=b617866c20482d133d5de66fceb37da3&device_id=123456789&client_os_type=1&nonce=1" \
+    #       "309976d0894817e2ad4452b69ee74fa&timestamp=1498716218809&third_uid=20170324&xima_order_" \
+    #       "no=20170324001712240000000023649378&pay_channel=2&confirm_type=1&sig=c543ea1bfacab9f772b28f1253619673"
+
+    # url = "https://mpay.ximalaya.com/openapi-payfacade-app/open_pay/get_order_detail?" \
+    #       "app_key=b617866c20482d133d5de66fceb37da3&device_id=123456789&client_os_type=1&third_ui" \
+    #       "d=20170324&nonce=6509976" \
+    #       "d0894817e2ad4452b69ee74fa&timestamp= 498716218179&xima_order_n" \
+    #       "o=20170324001712240000000023649378&sig=ebb8d87e8c73500126ba14f997f95d3a"
+
     o = urlparse(url)
     query = parse_qs(o.query)
     processed_query = {}
     if query.has_key('sig'):
         sig = query.pop("sig")[0]
+        # sig = "ebb8d87e8c73500126ba14f997f95d3a"
+        # a = ""
     else:
-        sig = "38ecc316b7224f2934848a671c34672c"
-    print sig
+        sig = "c543ea1bfacab9f772b28f1253619673"
+
     for key, value in query.items():
         processed_query[key] = value[0]
     # print type(processed_query)
-    # print processed_query
-    print get_sign(processed_query)
-    print "----------"
-    print get_sign2(processed_query)
-    print "----------"
+    print processed_query
+    sign = get_sign(processed_query)
+
+    print "---------- {} == {} : {}".format(sig, sign, sig == sign)
+    # print get_sign2(processed_query)
+    # print "----------"
 
 
 if __name__ == '__main__':

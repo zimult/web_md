@@ -227,7 +227,7 @@ def xmly():
     params['sig'] = sig
     log.info(params)
 
-    #url = "https://api.ximalaya.com" + req_api
+    # url = "https://api.ximalaya.com" + req_api
     url = "https://mpay.ximalaya.com" + req_api
 
     if request.method == 'GET':
@@ -247,9 +247,9 @@ def place_order():
     #     log.info("k:{}, v:{}".format(k,v))
     #     params[k] = v
     pa = {"price_type": 2, "uid": 108425629, "device_id": "C0695EA0-310A-44B9-855D-832B52DB263E", "price": 0.2,
-     "pack_id": "com.Freebox.xiaoyaRok", "pay_content": "6922889", "client_os_type": 1,
-     "sig": "738db9fe07b35fc0f4b3094dac543d55", "req_api": "\\/open_pay\\/place_order",
-     "access_token": "a8c3b5fe33121e23d21bee18f54ff9ea", "nonce": "7oKdQcvG2BwROJib"}
+          "pack_id": "com.Freebox.xiaoyaRok", "pay_content": "6922889", "client_os_type": 1,
+          "sig": "738db9fe07b35fc0f4b3094dac543d55", "req_api": "\\/open_pay\\/place_order",
+          "access_token": "a8c3b5fe33121e23d21bee18f54ff9ea", "nonce": "7oKdQcvG2BwROJib"}
 
     device_id = request.values.get('device_id')
     price_type = request.values.get('price_type')
@@ -260,43 +260,58 @@ def place_order():
     client_os_type = request.values.get('client_os_type')
     access_token = request.values.get('access_token')
 
-    #params['device_id'] = device_id
-    params['price_type'] = price_type
-    params['price'] = price
-    #params['uid'] = uid
-    #params['pack_id'] = pack_id
+    # params['device_id'] = device_id
+    params['price_type'] = int(price_type)
+    params['price'] = float(price)
+    # params['uid'] = uid
+    # params['pack_id'] = pack_id
     params['pay_content'] = pay_content
-   # params['client_os_type'] = client_os_type
-    params['access_token'] = access_token
+    # params['client_os_type'] = client_os_type
+    params['third_uid'] = access_token
+    # params['access_token'] = access_token
 
     log.info("/open_pay/place_order params recv:{}".format(params))
     # 记录本方数据库 订单表
 
-    #params.pop('device_id')
+    # params.pop('device_id')
     public_param = get_public_param()
     params.update(public_param)
 
-    sig = get_sign(params)
+    sig = get_sign_log(log, params)
     params['sig'] = sig
     log.info("/open_pay/place_order params send:{}".format(params))
-    url = "https://api.ximalaya.com" + '/open_pay/place_order'
+    url = "https://mpay.ximalaya.com" + "/open_pay/place_order"
 
     # if request.method == 'GET':
     #     res = requests.get(url, params)
     # else:
-    res = requests.post(url, params)
+
+    strcurl = "&".join("{0}={1}".format(k, v) for k, v in params.items())
+    log.info(strcurl)
+    header = {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
+    res = requests.post(url, data=params, headers=header, verify=False)
     log.info("xmly return code:{}, info:{}".format(res.status_code, res.text))
-    rsp = json.loads(res.text)
-    if rsp.has_key('error_no'):
-        # 有错误
-        error_no = rsp['error_no']
-    else:
-        xima_order_no = rsp['xima_order_no']
-        xima_order_status = rsp['xima_order_status']
-        xima_order_created_at = rsp['xima_order_created_at']
-        xima_order_updated_at = rsp['xima_order_updated_at']
-        # 更新数据库
+
+    ##body_value = urllib.urlencode(body_value)
+    # rq = urllib2.Request(url, params)
+    # rq.add_header('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8')
+    # result = urllib2.urlopen(rq).read()
+    # log.info(result)
+
+    # rsp = json.loads(res.text)
+    # if rsp.has_key('error_no'):
+    #     # 有错误
+    #     error_no = rsp['error_no']
+    # else:
+    #     xima_order_no = rsp['xima_order_no']
+    #     xima_order_status = rsp['xima_order_status']
+    #     xima_order_created_at = rsp['xima_order_created_at']
+    #     xima_order_updated_at = rsp['xima_order_updated_at']
+    #     # 更新数据库
+
+
     return res.text
+    # return strcurl
 
 
 # 确认订单
@@ -317,28 +332,41 @@ def confirm_order():
     print request.method
     sig = get_sign(params)
     params['sig'] = sig
-    url = "https://api.ximalaya.com" + req_api
+    url = "https://mpay.ximalaya.com" + req_api
 
     if request.method == 'GET':
         res = requests.get(url, params)
     else:
         res = requests.post(url, params)
     print res.status_code, res.text
-    res = json.loads(res.text)
-    if res.has_key('error_no'):
-        # 有错误
-        error_no = res['error_no']
-    else:
-        xima_order_no = res['xima_order_no']
-        xima_order_status = res['xima_order_status']
-        xima_order_created_at = res['xima_order_created_at']
-        xima_order_updated_at = res['xima_order_updated_at']
-        # 更新数据库
+    # res = json.loads(res.text)
+    # if res.has_key('error_no'):
+    #     # 有错误
+    #     error_no = res['error_no']
+    # else:
+    #     xima_order_no = res['xima_order_no']
+    #     xima_order_status = res['xima_order_status']
+    #     xima_order_created_at = res['xima_order_created_at']
+    #     xima_order_updated_at = res['xima_order_updated_at']
+    #     # 更新数据库
     return res.text
+
 
 @shorty_api.route('/open_pay/get_price_info', methods=['POST', 'GET'])
 def get_price_info():
-    sq = ""
+    url = "https://mpay.ximalaya.com/open_pay/get_price_info"
+    album_id = request.values.get('album_id')
+    params = {}
+    params['album_id'] = album_id
+    public_param = get_public_param()
+    params.update(public_param)
+    sig = get_sign(params)
+    params['sig'] = sig
+    res = requests.get(url, params)
+    # res = json.loads(res.text)
+    return res.text
+
+
 #
 
 if __name__ == '__main__':
