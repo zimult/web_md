@@ -16,21 +16,22 @@ import hashlib
 from util.tools import *
 import sys
 import time
+import jpush
 from enum import Enum
 
 reload(sys)
 sys.setdefaultencoding('utf-8')
 
-A_key = 'b617866c20482d133d5de66fceb37da3'
-A_secret = '4d8e605fa7ed546c4bcb33dee1381179'
+#A_key = 'b617866c20482d133d5de66fceb37da3'
+#A_secret = '4d8e605fa7ed546c4bcb33dee1381179'
+#serverAuthenticateStaticKey = 'z0hh5l9A'
 
-# A_key = 'f9aee5687ff7d8e66cdeff6a3c63c81a'
-# A_secret = '4fd4c41d4fe59a183ffd106a61d895bc'
+A_key = 'f9aee5687ff7d8e66cdeff6a3c63c81a'
+A_secret = '4fd4c41d4fe59a183ffd106a61d895bc'
+serverAuthenticateStaticKey = 'ptx0LdPn'
 
-serverAuthenticateStaticKey = 'z0hh5l9A'
-
-
-# serverAuthenticateStaticKey = 'de5kio2f'
+jpush_app_key = ""
+jpush_secret = ""
 
 
 class ConfirmType(Enum):

@@ -25,10 +25,10 @@ def get_price_info():
 def place_order():
     url = "https://mpay.ximalaya.com" + "/open_pay/place_order"
     #url = "https://mpay.ximalaya.com/openapi-payfacade-app/open_pay/place_order"
-    params = {'access_token': 'cbba01a439b817946c1a7d1686de8a12',
+    params = {'third_uid': 'cbba01a439b817946c1a7d1686de8a12',
               'price_type': 2,
-              'pay_content': '6922889',
-              'price': 0.20}
+              'pay_content': '6921109',
+              'price': 0.01}
     public_param = get_public_param()
     params.update(public_param)
     sig = get_sign(params)

@@ -5,12 +5,13 @@ from logging.handlers import TimedRotatingFileHandler
 
 from flask import Flask
 import config
-# import db
+import db
 import requests
 import time
 from flask import request, redirect
 import urllib, urllib2
 import json
+import traceback
 import sys
 from ali.alipay import *
 from util.tools import *
@@ -36,8 +37,9 @@ shorty_api = Flask(__name__)
 
 log.info("------ server start.")
 
+mysql_db = db.DB(config.host, config.user, config.password, config.database)
 
-# db_wp = db.DB(config.host, config.user, config.password, config.database_wp)
+
 # db_app = db.DB(config.host, config.user, config.password, config.database_app)
 
 
@@ -241,116 +243,153 @@ def xmly():
 # 下单
 @shorty_api.route('/open_pay/place_order', methods=['GET', 'POST'])
 def place_order():
-    params = {}
-    log.info("/open_pay/place_order params recv:{}".format(request.values))
-    # for k, v in request.values.items():
-    #     log.info("k:{}, v:{}".format(k,v))
-    #     params[k] = v
-    pa = {"price_type": 2, "uid": 108425629, "device_id": "C0695EA0-310A-44B9-855D-832B52DB263E", "price": 0.2,
-          "pack_id": "com.Freebox.xiaoyaRok", "pay_content": "6922889", "client_os_type": 1,
-          "sig": "738db9fe07b35fc0f4b3094dac543d55", "req_api": "\\/open_pay\\/place_order",
-          "access_token": "a8c3b5fe33121e23d21bee18f54ff9ea", "nonce": "7oKdQcvG2BwROJib"}
+    cursor = mysql_db.get_cursor()
+    try:
+        params = {}
+        log.info("/open_pay/place_order params recv:{}".format(request.values))
 
-    device_id = request.values.get('device_id')
-    price_type = request.values.get('price_type')
-    price = request.values.get('price')
-    uid = request.values.get('uid')
-    pack_id = request.values.get('pack_id')
-    pay_content = request.values.get('pay_content')
-    client_os_type = request.values.get('client_os_type')
-    access_token = request.values.get('access_token')
+        pa = {"price_type": 2, "uid": 108425629, "device_id": "C0695EA0-310A-44B9-855D-832B52DB263E", "price": 0.2,
+              "pack_id": "com.Freebox.xiaoyaRok", "pay_content": "6922889", "client_os_type": 1,
+              "sig": "738db9fe07b35fc0f4b3094dac543d55", "req_api": "\\/open_pay\\/place_order",
+              "access_token": "a8c3b5fe33121e23d21bee18f54ff9ea", "nonce": "7oKdQcvG2BwROJib"}
 
-    # params['device_id'] = device_id
-    params['price_type'] = int(price_type)
-    params['price'] = float(price)
-    # params['uid'] = uid
-    # params['pack_id'] = pack_id
-    params['pay_content'] = pay_content
-    # params['client_os_type'] = client_os_type
-    params['third_uid'] = access_token
-    # params['access_token'] = access_token
+        device_id = request.values.get('device_id')
+        price_type = request.values.get('price_type')
+        price = float(request.values.get('price'))
+        uid = request.values.get('uid')
+        pack_id = request.values.get('pack_id')
+        pay_content = request.values.get('pay_content')
+        client_os_type = request.values.get('client_os_type')
+        access_token = request.values.get('access_token')
 
-    log.info("/open_pay/place_order params recv:{}".format(params))
-    # 记录本方数据库 订单表
+        # params['device_id'] = device_id
+        params['price_type'] = int(price_type)
+        params['price'] = price
+        # params['uid'] = uid
+        # params['pack_id'] = pack_id
+        params['pay_content'] = pay_content
+        # params['client_os_type'] = client_os_type
+        params['third_uid'] = device_id
+        #params['access_token'] = access_token
 
-    # params.pop('device_id')
-    public_param = get_public_param()
-    params.update(public_param)
+        log.info("/open_pay/place_order params recv:{}".format(params))
+        # 记录本方数据库 订单表
 
-    sig = get_sign_log(log, params)
-    params['sig'] = sig
-    log.info("/open_pay/place_order params send:{}".format(params))
-    url = "https://mpay.ximalaya.com" + "/open_pay/place_order"
+        # params.pop('device_id')
+        public_param = get_public_param()
+        params.update(public_param)
 
-    # if request.method == 'GET':
-    #     res = requests.get(url, params)
-    # else:
+        sig = get_sign_log(log, params)
+        params['sig'] = sig
+        log.info("/open_pay/place_order params send:{}".format(params))
+        url = "https://mpay.ximalaya.com" + "/open_pay/place_order"
 
-    strcurl = "&".join("{0}={1}".format(k, v) for k, v in params.items())
-    log.info(strcurl)
-    header = {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
-    res = requests.post(url, data=params, headers=header, verify=False)
-    log.info("xmly return code:{}, info:{}".format(res.status_code, res.text))
+        # strcurl = "&".join("{0}={1}".format(k, v) for k, v in params.items())
+        # log.info(strcurl)
+        header = {'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'}
+        res = requests.post(url, data=params, headers=header, verify=False)
+        log.info("place_order xmly return code:{}, info:{}".format(res.status_code, res.text))
 
-    ##body_value = urllib.urlencode(body_value)
-    # rq = urllib2.Request(url, params)
-    # rq.add_header('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8')
-    # result = urllib2.urlopen(rq).read()
-    # log.info(result)
+        ##body_value = urllib.urlencode(body_value)
+        # rq = urllib2.Request(url, params)
+        # rq.add_header('Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8')
+        # result = urllib2.urlopen(rq).read()
+        # log.info(result)
 
-    # rsp = json.loads(res.text)
-    # if rsp.has_key('error_no'):
-    #     # 有错误
-    #     error_no = rsp['error_no']
-    # else:
-    #     xima_order_no = rsp['xima_order_no']
-    #     xima_order_status = rsp['xima_order_status']
-    #     xima_order_created_at = rsp['xima_order_created_at']
-    #     xima_order_updated_at = rsp['xima_order_updated_at']
-    #     # 更新数据库
-
-
-    return res.text
-    # return strcurl
+        rsp = json.loads(res.text)
+        if rsp.has_key('error_no'):
+            # 有错误
+            error_no = rsp['error_no']
+        else:
+            xima_order_no = rsp['xima_order_no']
+            xima_order_status = rsp['xima_order_status']
+            xima_order_created_at = int(rsp['xima_order_created_at']) / 1000
+            xima_order_updated_at = int(rsp['xima_order_updated_at']) / 1000
+            # 更新数据库
+            sql = "INSERT INTO t_order (order_no, status, device_id, price, pay_content, create_time, update_time) values ('{}', {}, '{}', {}, '{}', FROM_UNIXTIME({}), FROM_UNIXTIME({}))".format(
+                    xima_order_no, xima_order_status, device_id, int(price * 100), pay_content, xima_order_created_at, xima_order_updated_at)
+            log.info(rsp)
+            log.info(sql)
+            cursor.execute(sql)
+        mysql_db.commit()
+        return res.text
+    except Exception, e:
+        mysql_db.rollback()
+        log.error(e.message)
+        log.error(traceback.format_exc())
+        return "处理失败"
+        # return strcurl
 
 
 # 确认订单
 @shorty_api.route('/open_pay/confirm_order', methods=['POST', 'GET'])
 def confirm_order():
-    dt = dict(request.args)
-    params = {}
-    for k, v in dt.items():
-        params[k] = v[0]
-    req_api = request.path
+    # dt = dict(request.args)
+    cursor = mysql_db.get_cursor()
+    try:
+        params = {}
+        # for k, v in dt.items():
+        #     params[k] = v[0]
+        # req_api = request.path
+        device_id = request.values.get('device_id')
+        xima_order_no = request.values.get('xima_order_no')
+        confirm_type = int(request.values.get('confirm_type'))
+        # pack_id = request.values.get('pack_id')
+        # pay_content = request.values.get('pay_content')
+        # client_os_type = request.values.get('client_os_type')
+        access_token = request.values.get('access_token')
 
-    device_id = request.values.get('device_id')
-    params.pop('device_id')
-    public_param = get_public_param()
-    params.extend(public_param)
+        # params['device_id'] = device_id
+        params['xima_order_no'] = xima_order_no
+        params['confirm_type'] = confirm_type
+        # params['uid'] = uid
+        # params['pack_id'] = pack_id
+        if confirm_type == 1:
+            pay_channel = int(request.values.get('pay_channel'))
+            params['pay_channel'] = pay_channel
+        # params['client_os_type'] = client_os_type
+        params['third_uid'] = device_id
+        #params['access_token'] = access_token
 
-    print params
-    print request.method
-    sig = get_sign(params)
-    params['sig'] = sig
-    url = "https://mpay.ximalaya.com" + req_api
+        log.info("/open_pay/confirm_order params recv:{}".format(params))
 
-    if request.method == 'GET':
-        res = requests.get(url, params)
-    else:
+        public_param = get_public_param()
+        params.update(public_param)
+
+        print params
+        print request.method
+        sig = get_sign(params)
+        params['sig'] = sig
+
+        log.info("/open_pay/confirm_order params send:{}".format(params))
+        url = "https://mpay.ximalaya.com" + "/open_pay/confirm_order"
+
+        # if request.method == 'GET':
+        #     res = requests.get(url, params)
+        # else:
         res = requests.post(url, params)
-    print res.status_code, res.text
-    # res = json.loads(res.text)
-    # if res.has_key('error_no'):
-    #     # 有错误
-    #     error_no = res['error_no']
-    # else:
-    #     xima_order_no = res['xima_order_no']
-    #     xima_order_status = res['xima_order_status']
-    #     xima_order_created_at = res['xima_order_created_at']
-    #     xima_order_updated_at = res['xima_order_updated_at']
-    #     # 更新数据库
-    return res.text
+        log.info("confirm_order xmly return code:{}, info:{}".format(res.status_code, res.text))
 
+        rsp = json.loads(res.text)
+        if rsp.has_key('error_no'):
+            # 有错误
+            error_no = rsp['error_no']
+        else:
+            xima_order_no = rsp['xima_order_no']
+            xima_order_status = rsp['xima_order_status']
+            xima_order_created_at = int(rsp['xima_order_created_at']) / 1000
+            xima_order_updated_at = int(rsp['xima_order_updated_at']) / 1000
+            # 更新数据
+            cursor.execute(
+                "UPDATE t_order set status={}, update_time=FROM_UNIXTIME({}) WHERE order_no='{}'".format(
+                    xima_order_status, xima_order_updated_at, xima_order_no))
+        mysql_db.commit()
+        return res.text
+    except Exception, e:
+        mysql_db.rollback()
+        log.error(e.message)
+        log.error(traceback.format_exc())
+        return "处理失败"
 
 @shorty_api.route('/open_pay/get_price_info', methods=['POST', 'GET'])
 def get_price_info():
