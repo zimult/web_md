@@ -51,9 +51,9 @@ if __name__ == '__main__':
     #     print articles
     #     break
 
-    # html, img_list, author, video_list, title = sync.get_href('http://www.qicycling.cn/4919.html')
-    # print title
+    html, img_list, author, video_list, title = sync.get_href('http://www.qicycling.cn/16555.html')
+    print img_list
     #print html
 
-    ts = 736856
-    print datetime.fromtimestamp(ts)
+    # ts = 736856
+    # print datetime.fromtimestamp(ts)

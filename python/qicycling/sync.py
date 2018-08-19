@@ -373,7 +373,7 @@ def get_href_detail(html):
                         continue
 
             pinfo = {'url': img_url, 'width': int(width), 'height': int(height)}
-            if (int(width) > 100):
+            if (int(width) > 100 and img_url.find('1x1.trans.gif') == -1):
                 img_list.append(pinfo)
 
     new_html = new_html.replace("src=\"//v.qq.com", "src=\"https://v.qq.com")
